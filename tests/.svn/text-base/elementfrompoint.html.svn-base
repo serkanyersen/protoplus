@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <title>Element From Point</title>
+        <script src="../prototype.js" type="text/javascript"></script>
+        <script src="../protoplus.js" type="text/javascript"></script>
+        <script>
+	        
+            document.ready(function(){
+                
+                    document.observe('click', function(e){
+                        receiver = document.getUnderneathElement(e);
+                        console.log(receiver);
+                        $('offsetTree').value = receiver.tagName;
+                    })
+                
+            })
+        </script>                    
+        <style type="text/css">
+            .rel {
+                position: relative;
+                padding: 10px;
+                border: 1px solid #666666;
+            }
+            
+            .abs {
+                position: absolute;
+                top: 400px;
+                left: 0;
+                padding: 10px;
+                border: 1px solid #666666;
+            }
+            
+            .fix {
+                position: fixed;
+                top: 200px;
+                left: 0;
+                padding: 10px;
+                border: 1px solid #666666;
+            }
+            
+            textarea {
+                width: 100%;
+                height: 50px;
+            }
+        </style>
+    </head>
+    <body>
+    <center>
+    <table width="400">
+        <tr><td>
+    <h2>DOM tests - elementFromPoint</h2>
+    <div id="header">
+    </div>
+    <div class="floater">
+        <p>
+            Found at click location:
+        </p>
+        <textarea id="offsetTree">
+        </textarea>
+        <p>
+            When you scroll, Opera and Safari start reporting weird elements. That's because they need
+            <code>
+                pageX/Y
+            </code>
+            coordinates. The test script uses 
+            <code>
+                clientX/Y
+            </code>
+            coordinates, though,
+            because IE and Firefox 3 require these.
+        </p>
+    </div>
+    <p class="intro">
+        On this page I test the 
+        <code>
+            elementFromPoint()
+        </code>
+        method.
+    </p>
+    <p>
+        Click on any element. The textarea should show the element's nodeName.
+    </p>
+    <h3>Tests</h3>
+    <div>
+        <p>
+            This is a paragraph in a div with 
+            <code>
+                position: static
+            </code>.
+        </p>
+    </div>
+    <div class="rel">
+        <p>
+            This is a paragraph in a div with 
+            <code>
+                position: relative
+            </code>.
+        </p>
+        <p>
+            This is another paragraph in a div with 
+            <code>
+                position: relative
+            </code>, but now the paragraph 
+            itself has 
+            <code>
+                position: relative
+            </code>, too.
+        </p>
+    </div>
+    <table>
+        <tr>
+            <td>
+                This is a TD
+            </td>
+            <td>
+                <p>
+                    This is a paragraph in a TD
+                </p>
+            </td>
+            <td>
+                <img src="/pix/logo_ppk.gif" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                This is a TD
+            </td>
+            <td>
+                <p>
+                    This is a <em>paragraph</em>
+                    in a TD
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                This is a TD
+            </td>
+            <td>
+                <p class="rel">
+                    This is a paragraph with 
+                    <code>
+                        position: relative
+                    </code>
+                    in a TD
+                </p>
+            </td>
+        </tr>
+    </table>
+    <div class="rel">
+        <div class="rel">
+            <div class="rel">
+                <p>
+                    Let's <strong>NEST</strong>!
+                </p>
+            </div>
+        </div>
+    </div>
+    </td></tr>
+    </table>
+    </center>
+    <div class="fix">
+        <p>
+            A div with 
+            <code>
+                position: fixed
+            </code>.
+        </p>
+    </div>
+    <div class="abs">
+        <p>
+            A div with 
+            <code>
+                position: absolute
+            </code>.
+        </p>
+    </div>
+</body>
+</html>

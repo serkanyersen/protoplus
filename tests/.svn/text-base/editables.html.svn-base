@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Editables</title>
+        <script src="../prototype.js" type="text/javascript"></script>
+        <script src="../protoplus.js" type="text/javascript"></script>
+        <style>
+            .custom{
+                border:1px dashed #ccc;
+                width:100%;
+            }
+            .customDropdown{
+                width:150px;
+            }
+            .customTextarea{
+                border:1px dashed #ccc;
+                width:150px;
+                height:100px;
+            }
+        </style>
+        <script>
+            document.ready(function(){
+                $('title').editable();
+                $('edit1').editable();
+                $('edit2').editable({type:'textarea', className:'customTextarea'});
+                $('edit3').editable({className:'custom', doubleClick:true});
+                $('edit4').editable({options:[{text:'Option 1'},{text:'Option 2'},{text:'Option 3'}], type:'dropdown', className:'customDropdown'});
+            })
+        </script>
+	</head>
+	<body>
+	    <h2 id="title">Editables</h2>
+        <div id="edit1">Edit Me, just default</div><br>
+        <div id="edit2">Edit in text area, Shift+Enter for new line, custom class</div><br>
+        <div id="edit3">Edit custom box, double click to edit</div><br>
+        <div id="edit4">Edit Dropdown</div><br>
+	</body>
+</html>

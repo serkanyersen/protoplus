@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>show image</title>
+        <script src="../prototype.js"></script>
+        <script src="../protoplus.js"></script>
+        <style>
+            body, html{
+                height:100%;
+                width:100%;
+                padding:0px;
+                margin:0px;
+            }
+            body{
+                background:#ffffff;
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+                font-size:12px;
+            }
+            #img-out{
+                position:relative;
+                width:200px;
+                height:106px;
+            }
+        </style>
+        <script>
+            document.ready(function(){
+                var w = $("img").width;
+                
+                $("img").setStyle({position:"absolute", top:0, left:0});
+                $("img").observe("click", function(){
+                    if(!$("img").expanded){
+                        var w = parseInt($("img").width, 10);
+                        var nw = parseInt($("img").naturalWidth, 10);
+                        
+                        var h = parseInt($("img").height, 10);
+                        var nh = parseInt($("img").naturalHeight, 10);
+                        console.log(h, nh);
+                        $("img").shift({width:nw, left:"-"+((nw-w)/3), top:"-"+((nh-h)/3)});
+                    }
+                    
+                });
+            });
+        </script>
+	</head>
+	<body>
+	    <table border="1">
+	        <tr><td width="400">ss</td><td height="150">sadasd</td><td width="400">ss</td></tr>
+            <tr>
+                <td>ss</td>
+                <td>
+                    <div id="img-out">
+                        <img width="200" id="img" src="http://memberkit1.interlogy.com/uploads/tour/feature/serkan/6_file_manager.png">
+                    </div>
+                </td>
+                <td>ss</td>
+            </tr>
+            <tr><td>ss</td><td height="150">sadasd</td><td>ss</td></tr>
+	    </table>
+	</body>
+</html>

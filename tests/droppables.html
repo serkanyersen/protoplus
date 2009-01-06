@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+		<title>drag and DROP</title>
+        <style>
+            body{
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+                font-size:12px;
+            }
+            .elem1, .elem{
+                height:100px;
+                width:100px;
+                background:#f5f5f5;
+                border:1px solid #ccc;
+                margin:5px;
+            }
+            #drag1, #drag{
+                position:absolute;
+                top:30px;
+                height:100px;
+                width:100px;
+                background:#bbb;
+                border:1px solid #999;
+                margin:5px;
+            }
+            #drag1{left:350px;}
+            #drag{left:240px}
+            
+            .dropme{
+                border:1px solid red;
+            }
+        </style>
+        <script src="../prototype.js"></script>
+        <script src="../protoplus.js"></script>
+        <script>
+            Element.addMethods({
+                droppable:function(element, options){
+                    options = Object.extend({
+                        dragClass: "",  
+                        handler: false, 
+                        onStart: Prototype.K, 
+                        onDrag:  Prototype.K,
+            			onDragEnd:  Prototype.K,
+                        onEnd:   Prototype.K, 
+                        dragEffect: true,     
+                        revert: false,        
+                        clone:   false,       
+                        snap:    false,       
+                        constraint: false     
+                    }, options || {});
+                }
+            })
+            document.ready(function(){
+                $("drag", "drag1").each(function(el){ 
+                    $(el).draggable({
+						revert: true,
+                        onEnd:function(drag, h, e){
+                            drag.setStyle({display:"none"});
+                            receiver = $(document.getUnderneathElement(e))
+                            drag.setStyle({display:"block"});
+                            if(receiver.droppable){
+                                if(!receiver.acceptClass){
+                                    receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic'});
+                                }else{
+                                    if(receiver.acceptClass.strip() == drag.className.strip()){
+                                        receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic'});
+                                    }
+                                }
+                            }
+                        }
+                    })
+                });
+                $("drop").droppable = true;
+                $("drop2").droppable = true;
+                $("drop2").acceptClass = "elem1";
+            })
+        </script>
+	</head>
+	<body>
+	    Doesn't work on FF2, Buggy at Safari.
+        <table>
+            <tr>
+                <td valign="top">
+                    <div class='elem' id='drop'>
+                        Drop here<br> accepts both
+                    </div>
+                </td>
+                <td valign="top">
+                    <div class='elem' id='drop2'>
+                        Drop here<br> Accepts only second box.
+                    </div>
+                </td>
+                <td valign="top">
+                    <div class='elem' id='drag'>
+                        <b>Drag me</b>
+                    </div>
+                </td>
+                <td valign="top">
+                    <div class='elem1' id='drag1'>
+                        <b>Drag me</b>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+	</body>
+</html>

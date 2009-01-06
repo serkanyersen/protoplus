@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>Protoplus++ Animations test</title>
+        <script type="text/javascript" src="../prototype.js"></script>
+        <script type="text/javascript" src="../protoplus.js"></script>
+        <style type="text/css">
+            
+            #stage {
+                width: 600px;
+                height: 475px;
+                border:1px solid #333;
+                background:#aaa;
+                -moz-border-radius:10px 10px 10px 10px;
+            }
+            
+            #test {
+            	top:35px;
+                left:10px;
+                height: 50px;
+                width: 50px;
+                background-color: #FFFFE0;
+                -moz-border-radius:25px 25px 25px 25px;
+				border:1px solid #666;
+				position:absolute;
+            }
+            
+        </style>
+        <script type="text/javascript">
+            
+            function runtest(e){
+                $('test').shift({
+                    top:Event.pointerY(e)-25, 
+                    left:Event.pointerX(e)-25, 
+                    easing: Transitions[$('ease').getSelected().text], 
+                    duration: parseFloat( $('duration').getSelected().text )
+                });
+            };
+            
+            document.ready(function(){
+                $H(Transitions).each(function(e){
+                    $('ease').insert(new Element("option", {value:e.key}).insert(e.key));
+                });
+                $('stage').observe('click', runtest);
+                $('test').draggable({revert:{easing:'elastic', duration:1.2}});
+            });
+        </script>
+    </head>
+    <body>
+    	<div id="debug" style="position:absolute; top:25px; right:25px;"></div>
+        <table cellpadding="0" cellspacing="0" height="500" width="600" border="0">
+            <tr>
+                <td width="80" height="25">Easing:</td>
+                <td width="100"><select id="ease"> </select></td>
+                <td width="180">Duration (seconds):</td>
+                <td><select id="duration">
+                        <option>0.2</option>
+                        <option>0.5</option>
+                        <option selected="selected">1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                    </select>
+                </td></tr>
+            <tr>
+                <td colspan="4" valign="top">
+                    <div onmousedown="return false;" id="stage"></div>
+                    <div id="test"></div>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

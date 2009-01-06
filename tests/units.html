@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Units</title>
+        <script src="../prototype.js" type="text/javascript"></script>
+        <script src="../protoplus.js" type="text/javascript"></script>
+        <style>
+            body{
+                font-size:11px;
+                font-family:Verdana;
+            }
+            .dd{
+                height:25px;
+                border:1px solid #ccc;
+                background:#f5f5f5;
+                margin:5px;
+                overflow:hidden;
+            }
+            
+        </style>
+        <script>
+            document.ready(function(){
+                $$(".dd").each(function(div){
+                    div.observe('click', function(){
+                        div.shift({width:100, duration:1, easing:'pulse', background:'#FFFFE0', link:'ignore'});
+                    })
+                })
+            })
+        </script>
+	</head>
+	<body>
+	    <div class="dd" style="width: 30px;">
+	        30px;
+	    </div>
+        <div class="dd" style="width: 30em;">
+	        30em;
+	    </div>
+        <div class="dd" style="width: 30pt;">
+	        30pt;
+	    </div>
+        <div class="dd" style="width: 30%;">
+	        30%;
+	    </div>
+	</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Floating Divs</title>
+        <script src="../prototype.js"></script>
+        <script src="../protoplus.js"></script>
+        <style>
+            body, html{
+                height:100%;
+                width:100%;
+                padding:0px;
+                margin:0px;
+            }
+            body{
+                background:#000000;
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+                font-size:12px;
+            }
+            .outer{
+                top:10%;
+                left:25%;
+                position:absolute;
+            }
+            .inner{
+                float:left;
+                background:#000000;
+                height:50px;
+                width:50px;
+            }
+        </style>
+        <script>
+            document.ready(function(){
+                $$(".inner").each(function(e){
+                    e.hover(function(){
+                      e.shift({background:'#FFFF00', duration:1});  
+                    }, function(){
+                      e.shift({background:'#000000', duration:1});
+                    })
+                });
+            });
+        </script>
+	</head>
+	<body>
+	    <div class="outer">
+	        <div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><br>
+            <div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><br>
+            <div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><br>
+            <div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><br>
+            <div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><div class="inner"></div><br>
+	    </div>
+	</body>
+</html>

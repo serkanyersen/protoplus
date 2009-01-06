@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+    <head>
+        <title>Protoplus</title>
+        <script type="text/javascript" src="prototype.js"></script>
+        <script type="text/javascript" src="protoplus.js"></script>
+        <style>
+            body{
+                font-family:"Trebuchet MS";
+                font-size:13px;
+            }
+            table.outer{
+                border:1px solid #ccc;
+                border-collapse:collapse;
+                background:#f5f5f5;
+            }
+            table.outer td{
+                border:1px solid #ccc;
+            }
+            .title{
+                font-size:20px;
+                font-weight:bolder;
+            }
+            .description{
+                font-size:11px;
+            }
+            .example{
+                background:#333;
+                color:white;
+                font-family:monaco;
+            }
+            table.options-table{
+                
+            }
+            table.options-table td{
+                border:none;
+                font-size:12px;
+            }
+            table.options-table th{
+                text-align:left;
+            }
+            table.options-table tr{
+                background:#fafafa;
+            }
+            .option-titles{
+                background:#eaeaea !important;
+            }
+            .option{
+                
+            }
+            .default{
+                
+            }
+            .values{
+                
+            }
+            .desc{
+                
+            }
+            .dotted{
+                border:1px dotted #999;
+                background:#fff;
+                height:1px;
+            }
+            .alter{
+                background:#f0f0f0 !important;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="tests">Tests</a>
+        <h2>Protoplus Documantations</h2>
+        <table class="outer" cellpadding="5" cellspacing="0">
+            <tr>
+                <td class="title">Shift</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="description">
+                        Sets animatically any numeric style value of an element. Also sets colors and scroll amounts
+                        <br>
+                        it a generic animation library.
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="example">
+                    <code  lang="javascript">
+                        $(element).shift({height:100, width:200, duration:3});
+                    </code>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table class="options-table" cellpadding="5" cellspacing="0">
+                        <tr class="option-titles">
+                            <th>Option</th>
+                            <th>Default</th>
+                            <th>Values</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <th class="option">
+                                duration
+                            </th>
+                            <td class="default">
+                                1
+                            </td>
+                            <td class="values">
+                                numeric value as seconds
+                            </td>
+                            <td class="desc">
+                                Defines how much time to it will take to complete the animation.
+                            </td>
+                        </tr>
+                        <tr class="alter">
+                            <th class="option">
+                                easing
+                            </th>
+                            <td class="default">
+                                sineOut
+                            </td>
+                            <td class="values">
+                                Transition name
+                            </td>
+                            <td class="desc">
+                                Defines which easing method will be applied for the animation.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="option">
+                                onStart
+                            </th>
+                            <td class="default">
+                                -
+                            </td>
+                            <td class="values">
+                                Function
+                            </td>
+                            <td class="desc">
+                                A function which will be run before the animation starts.
+                            </td>
+                        </tr>
+                        <tr class="alter">
+                            <th class="option">
+                                onEnd
+                            </th>
+                            <td class="default">
+                                -
+                            </td>
+                            <td class="values">
+                                Function
+                            </td>
+                            <td class="desc">
+                                A function which will be run after the animation finishes.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="option">
+                                remove
+                            </th>
+                            <td class="default">
+                                false
+                            </td>
+                            <td class="values">
+                                Boolean
+                            </td>
+                            <td class="desc">
+                                If true, removes the element from dom when the animation finishes.
+                            </td>
+                        </tr>
+                        <tr class="alter">
+                            <th class="option" valign="top">
+                                Style Property
+                            </th>
+                            <td class="default" valign="top">
+                                -
+                            </td>
+                            <td class="values" valign="top">
+                                Any Numeric Value
+                            </td>
+                            <td class="desc" valign="top">
+                                Accepts an style propety of an HTML property with a numeric value. <br>
+                                Such as height, width, borderWidh, fontSize, opacity, etc.<br>
+                                properties must be camelized 'font-size to fontSize', <br>
+                                this option also accepts color values such as background, borderColor, color.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="option">
+                                scrollX or scrollLeft
+                            </th>
+                            <td class="default">
+                                -
+                            </td>
+                            <td class="values">
+                                Any positive numeric value
+                            </td>
+                            <td class="desc">
+                                Horizontally scrolls the overflowed elements
+                            </td>
+                        </tr>
+                        <tr class="alter">
+                            <th class="option">
+                                scrollY or scrollTop
+                            </th>
+                            <td class="default">
+                                -
+                            </td>
+                            <td class="values">
+                                Any positive numeric value
+                            </td>
+                            <td class="desc">
+                                Vertically scrolls the overflowed elements
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <hr class="dotted" />
+        <br>
+    </body>
+</html>
