@@ -14,18 +14,18 @@ h3. Examples
 Protoplus inherits the usage of prototype library. So usage is as easy as prototype library.
 
 h4. Including on page
-
-  &lt;script type="text/javascript" src="prototype.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="protoplus.js"&gt;&lt;/script&gt;
+<code>
+  <script type="text/javascript" src="prototype.js"></script>;
+  <script type="text/javascript" src="protoplus.js"></script>;
 
 h4. Using shift function 
 
 Shift function is a core animation function. It's basictly the same of @setStyle@ of prototype but shift sets the style by animations.
-
-  &lt;script&gt;
+<code>
+  <script>;
     $('div').shift({ height:150, width:200, background:'#FFFFE0', duration:3, easing:'sineOut' });
-  &lt;/script&gt;
-
+  </script>;
+</code>
 As you can see its as easy as using prototype.
 
 I'll write a complete documentation soon.
