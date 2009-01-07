@@ -3,7 +3,7 @@ h2. Protoplus.js Prototype Extensions Library
 This is an extensions library for Prototype.js (v1.6+). Protoplus basictly adds new features to Prototype.js. 
 h4. For example:
 
-There are visual functions like A core animation function, textshadows, drag&drop, Instant Editables, Resizable text areas, Easy Tooltips, Star Rating Tool and Apple Like Search Box
+There are visual functions like A core animation function, textshadows, drag&drop, Instant Editables, Easy Tooltips, Star Rating Tool and Apple Like Search Box
 And there are other functions supporting these functions such as, Color parsers, PHP-like GET parameter reader, selectable and un selectable elements, Cookie functions, Hower mimic,
 Scroll methods, Element value getters.
 
