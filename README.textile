@@ -13,14 +13,15 @@ h3. Examples
 
 Protoplus inherits the usage of prototype library. So usage is as easy as prototype library.
 
-h4. Including on page
+<b>Including on page</b>
 <pre>
 <code>
   <script type="text/javascript" src="prototype.js"></script>;
   <script type="text/javascript" src="protoplus.js"></script>;
 </code>
 </pre>
-h4. Using shift function 
+
+<b>Using shift function</b> 
 
 Shift function is a core animation function. It's basictly the same of @setStyle@ of prototype but shift sets the style by animations.
 <pre>
