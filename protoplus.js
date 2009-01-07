@@ -1043,6 +1043,7 @@ Element.addMethods({
         element.insert(hidden);
         if(options.value > 0){
             element.descendants().each(function(e, c){
+                 c++;
                  if(c <= options.value){ 
                      e.setStyle({backgroundPosition:image.clicked }).addClassName("rated"); 
                  }
