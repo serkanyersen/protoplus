@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Windows</title>
+        <script type="text/javascript" src="../prototype.js"></script>
+        <script type="text/javascript" src="../protoplus.js"></script>
+        <style>
+            p{
+                width:800px;
+                text-align:justify;
+            }
+        </style>
+        <script>
+            document.ready(function(){
+                //$('win').draggable({handler:'title-text', dragEffect:false});
+            })
+            
+            function opn_window(other){
+                
+                if(other){
+                    document.createNewWindow({
+                        title:'Other window',
+                        content:"hello world",
+                        width:400,
+                        borderWidth:28,
+                        closeButton:'<img src="../../videoportal/memberkit/images/cross.png" height="20" >',
+                        borderColor:'#000',
+                        borderOpacity:0.6,
+                        closeEffect:false,
+                        openEffect:false,
+                        dim:false
+                    })
+                    
+                }else{
+                    
+                    document.createNewWindow({
+                        title:'Hello this is my window',
+                        content:$('text').innerHTML,
+                        width:600
+                    })
+                }
+                
+                
+            }
+            
+        </script>
+	</head>
+	<body>
+        <input type="button" value="open Window" onclick="opn_window()">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Ut dolor. Curabitur elementum quam eu mi. Sed eget ligula
+        in augue faucibus elementum! Pellentesque venenatis.
+        Quisque nec metus. Maecenas id nibh. Mauris rhoncus, nunc
+        eget feugiat tincidunt, nulla odio porta ipsum, eget
+        laoreet felis lectus eu mauris. Pellentesque mattis. Ut
+        eget elit. Sed blandit nisi. Nullam vitae sapien sit amet
+        nunc ullamcorper faucibus. Curabitur odio turpis, cursus
+        non, tristique eget, imperdiet vitae, lacus. Pellentesque
+        tellus urna, auctor eu, congue nec, pharetra et, leo.
+        Quisque at tortor. Proin lacinia volutpat arcu.
+        Pellentesque blandit. Ut rhoncus dui euismod nibh. Duis
+        volutpat ultricies justo. Aenean non erat eu lorem auctor
+        pellentesque.</p>
+
+        <p>Aliquam vestibulum diam non est. Vestibulum tellus. Nam
+        velit massa, eleifend ut, consequat congue, lacinia
+        pretium, purus? Vivamus in ante ultrices elit gravida
+        rutrum. Integer a eros ac diam hendrerit convallis! Integer
+        vulputate urna a felis. Mauris ornare nulla mollis augue.
+        Pellentesque neque lacus, egestas eu, ultrices a, dictum
+        vitae, diam. Maecenas lacinia, felis suscipit hendrerit
+        euismod; neque est malesuada diam, sit amet elementum
+        tortor leo dignissim enim. Cras interdum. Sed mi.</p>
+
+        <p>Nulla metus lacus, interdum sit amet, fringilla a,
+        imperdiet ut, nisl. Proin quam purus, ullamcorper eu,
+        commodo eget, tincidunt ut, diam. Nullam id nisl sed ligula
+        consectetur posuere. Cras id risus. Integer dictum volutpat
+        enim. Aenean lobortis arcu ut sapien. Curabitur in lorem.
+        Donec consequat nunc ultrices nibh? Suspendisse eget elit
+        ut tellus lobortis ultrices? Aliquam tellus! Class aptent
+        taciti sociosqu ad litora torquent per conubia nostra, per
+        inceptos himenaeos. Aliquam imperdiet tempor urna! In
+        volutpat mauris. Vivamus lobortis.</p>
+        <div id="mybox" style="width:100px; height:100px; font-size:10px; border:1px solid #ccc; background:#f5f5f5">Praesent ullamcorper, urna nec venenatis suscipit,</div>
+        <p id='text'>Pellentesque accumsan euismod purus. Praesent tortor
+        turpis, sagittis sit amet, venenatis vel, tincidunt eget,
+        leo! Praesent ullamcorper, urna nec venenatis suscipit,
+        lacus tellus dictum velit; et placerat libero ipsum ac
+        augue? Suspendisse luctus condimentum metus. Suspendisse
+        bibendum posuere justo. Donec eu nisl. Curabitur eleifend
+        libero quis libero. Ut risus nulla, sodales at, tempor nec,
+        sagittis nec, nulla. Vivamus ac purus? Mauris leo nulla,
+        gravida id, volutpat quis, tincidunt non, dolor. Sed
+        lobortis suscipit eros! Fusce at lorem. Nam eget ipsum eu
+        est semper dictum. Mauris vel tortor in lacus condimentum
+        dapibus. Fusce tristique diam rhoncus diam! Praesent
+        pellentesque augue quis eros. Donec ultrices. Pellentesque
+        habitant mo
+        <input type="button" value="Open Other Window" onclick="opn_window(1)">
+        </p>
+        
+        
+        
+        
+	</body>
+</html>

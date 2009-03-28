@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Apple Search box</title>
+        <script type="text/javascript" src="../prototype.js"></script>
+        <script type="text/javascript" src="../protoplus.js"></script>
+        <style>
+            body{
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+                font-size:11px;
+
+            }
+        </style>
+        <script>
+            document.ready(function(){
+                $$(".convert").invoke("makeSearchBox", {
+                    imagePath:"../apple_search.png"
+                });
+            });
+        </script>
+	</head>
+	<body>
+        <table cellpadding="5" cellspacing="2">
+            <tr>
+                <th colspan="2">Without background</th>
+            </tr>
+            <tr>
+                <td>Original box:</td><td><input type="search"></td>
+            </tr>
+            <tr>
+                <td>Converted box:</td><td><input class="convert" type="search"></td>
+            </tr>
+        </table>
+        <br><br>
+        <table bgcolor="#f5f5f5" style="border:1px solid #ccc;" cellpadding="5" cellspacing="2">
+            <tr>
+                <th colspan="2">With background</th>
+            </tr>
+            <tr>
+                <td>Original box:</td><td><input type="search"></td>
+            </tr>
+            <tr>
+                <td>Converted box:</td><td><input class="convert" type="search"></td>
+            </tr>
+        </table>
+        
+	</body>
+</html>

@@ -248,6 +248,155 @@ Object.extend(document, {
         }else{
             return {};
         }
+    },
+    /**
+     * Creates a window
+     * @param {Object} options
+     */
+    createNewWindow: function(options){
+        options = Object.extend({ // Default options
+            onClose:Prototype.K,
+            height:false,
+            width:400,
+            title:'&nbsp;',
+            top:'25%',
+            left:'25%',
+            borderWidth:15,
+            borderColor:'#333',
+            borderOpacity:0.3,
+            borderRadius: "5px",
+            titleClass:false,
+            contentClass:false,
+            closeButton:'X',
+            openEffect:true,
+            closeEffect:true,
+            dim:true,
+            dimColor:'#fff',
+            dimOpacity:0.6
+        }, options || {});
+        
+        options.width = parseInt(options.width, 10);
+        options.height = (options.height)? parseInt(options.height, 10) : false;
+        options.borderWidth = parseInt(options.borderWidth, 10);
+        
+        if (options.dim && !document.dimmed) {// Dimm the window background
+            var dimmer = new Element('div');
+            dimmer.setStyle({background:options.dimColor, position:'absolute', top:'0px', left:'0px', height:'100%', width:'100%', opacity:options.dimOpacity, zIndex:10000});
+            $(document.body).setStyle({overflow:'hidden'});
+        }
+        
+        // Create window structure
+        var win, tbody, tr, wrapper, background, title, title_table, title_text, title_close, content;
+        win = new Element('div');
+        win.insert(background = new Element('div'));
+        win.insert(wrapper = new Element('div'));
+        wrapper.insert(title = new Element('div'));
+        title.insert(title_table = new Element('table', { width:'100%' }).insert(tbody = new Element('tbody').insert(tr = new Element('tr'))));
+        tr.insert(title_text = new Element('td'));
+        tr.insert(title_close = new Element('td', {width:20, align:'center'}));
+        wrapper.insert(content = new Element('div'));
+        
+        // set styles
+        win.setStyle({
+            top: options.top,
+            left: options.left,
+            position: 'absolute',
+            padding: options.borderWidth+'px',
+            height: options.height !== false? options.height+'px' : "auto",
+            width: options.width + 'px',
+            zIndex: 10001
+        });
+        
+        background.setStyle({
+            height: '100%',
+            width: '100%',
+            background: options.borderColor,
+            position: 'absolute',
+            top: '0px',
+            left: '0px',
+            zIndex: 500,
+            opacity: options.borderOpacity,
+            borderRadius: options.borderRadius,
+            MozBorderRadius: options.borderRadius,
+            '-webkit-border-radius': options.borderRadius
+        });
+        
+        if(!options.titleClass){
+            title.setStyle({
+                background: '#fff',
+                zIndex: 1000,
+                position: 'relative',
+                padding: '2px',
+                borderBottom: '1px solid #ccc'
+            });
+        }else{
+            title.addClassName(options.titleClass);
+        }
+        
+        if(!options.contentClass){
+            content.setStyle({
+                background: '#fff',
+                zIndex: 1000,
+                position: 'relative',
+                padding: '8px'
+            });
+        }else{
+            content.addClassName(options.contentClass);
+        }
+        
+        wrapper.setStyle({border:'1px solid #ddd'});
+        title_text.setStyle({fontWeight:'bold', color:'#777'});                    
+        title_close.setStyle({fontFamily:'Arial, Helvetica, sans-serif', color:'#aaa', cursor:'default'});
+
+        var closebox = function(){ // Close function
+            if(options.onClose(win) !== false){
+                var close = function(){
+                    if(dimmer){ dimmer.remove(); document.dimmed = false; }
+                    win.remove();
+                    $(document.body).setStyle({overflow:'auto'}); 
+                }
+                if(options.closeEffect === true){
+                    win.shift({opacity:0, duration:0.5, onEnd: close});
+                }else{
+                    close();
+                }
+            }
+        }
+        
+        // Set the content
+        title_text.insert(options.title);
+        title_close.insert(options.closeButton);
+        title_close.onclick = closebox;
+        content.insert(options.content);
+        
+        // Insert box onto screen
+        if (options.dim && !document.dimmed) {
+            $(document.body).insert(dimmer);
+            document.dimmed = true;
+        }
+        
+        if(options.openEffect === true){
+            win.setStyle({opacity:0});
+            win.shift({opacity:1, duration:0.5});
+        }
+        
+        $(document.body).insert(win);
+        
+        win.observe('keydown', function(){ /* I don't know */ })
+        
+        // Center the box on screen
+        var vp = document.viewport.getDimensions();
+        var bvp = win.getDimensions();
+        var top = (vp.height - bvp.height) / 2;
+        var left = (vp.width - bvp.width) / 2;
+        win.setStyle({top:top+"px", left:left+"px"});
+        
+        // Make it draggable
+        win.draggable({handler:title_text, dragEffect:false, onStart:function(){
+            // TODO: Should hide the content to make drag faster   //content.hide();
+        }, onEnd:function(){
+            // TODO: Bring content back // content.show();
+        }});
     }
 });
 
@@ -457,7 +606,9 @@ Element.addMethods({
             } else {
                 val = elem.value;
             }
+            
             if(!outer){ return true; }
+            
             if (val === "") {
                 outer.update(outer.defaultText);
             } else {
@@ -662,7 +813,7 @@ Element.addMethods({
             } else {
                 to = (typeof option.value == "string") ? parseInt(option.value, 10) : option.value;
                 key = option.key;
-                from = element.getStyle(option.key);
+                from = element.getStyle(option.key.replace("-webkit-", "").replace("-moz-", ""));
                 unit = option.key == 'opacity' ? '' : (/\d+[a-zA-Z%]+$/.test(from))? from.match(/\d+([a-zA-Z%]+)$/)[1] : 'px';
                 from = parseFloat(from);
             }
@@ -852,6 +1003,10 @@ Element.addMethods({
                 }
             }, options.delay*1000 || 0);
         },function(){
+            if(document.stopTooltip){ 
+                $$(".pp_tooltip_").each(function(t){ t.remove(); });
+                return true; 
+            }
             clearTimeout(outer.delay);
             clearTimeout(outer.duration);
             if(options.fadeOut){
@@ -999,12 +1154,18 @@ Element.addMethods({
             value: element.getAttribute("value")? element.getAttribute("value") : 0
         }, options || {});
         
+        if(element.converted){
+           return element;
+        }
+        
+        element.converted = true;
+        
         var image = { blank: "0px 0px", over: "-16px 0px", clicked: "-32px 0px", half: "-48px 0px" };
         var hidden = new Element("input", {type:"hidden", name:options.name});
         var stardivs = $A([]);
         
         element.disabled = options.disabled;
-        element.setStyle({width:(options.stars*28)+"px", cursor:options.disabled? "default" : "pointer", clear:"left"});
+        element.setStyle({width:(options.stars*20)+"px", cursor:options.disabled? "default" : "pointer", clear:"left"});
         element.unselectable();
         $A($R(1, options.stars)).each(function(i){
             var star = new Element("div").setStyle({height:"16px", width:"16px", margin:"1px", cssFloat:"left", backgroundImage:"url("+options.imagePath+")"});
@@ -1079,31 +1240,39 @@ Element.addMethods({
             }).observe("focus", function(){
                 if(element.value == options.defaultText){
                     element.value="";
-                    element.setStyle({color:"#333"});
+                    element.setStyle({color:"#666"});
                 }
             }).observe("blur", function(){
                 if(element.value===""){
-                    element.setStyle({color:"#ccc"});
+                    element.setStyle({color:"#999"});
                     element.value = options.defaultText;
+                    if (cross) {
+                        cross.setStyle({
+                            backgroundPosition: element.value !== "" ? "0 -57px" : "0 -38px"
+                        });
+                    }
                 }
             });
             element.value = options.defaultText;
-            element.setStyle({color:"#ccc"});
+            element.setStyle({color:"#999"});
+            
             if(Prototype.Browser.WebKit){
-	    	element.addClassName("searchbox");
+	    	    element.addClassName("searchbox");
                 return element;
             }
             
             element.setStyle({
                 border:"none",
-                background:"none"
+                background:"none",
+                height:"14px",
+                width: (parseInt(element.getStyle("width"), 10)-22)+"px"
             });
-            
+            var tbody;
             var table = new Element("table", { cellpadding: 0, cellspacing: 0, className:"searchbox"}).setStyle({
                 height:"19px",
                 fontFamily:"Verdana, Geneva, Arial, Helvetica, sans-serif",
                 fontSize:"12px"
-            }).insert(new Element("tbody"));
+            }).insert(tbody = new Element("tbody"));
             
             var tr = new Element("tr");
             var cont = new Element("td").setStyle({
@@ -1111,11 +1280,11 @@ Element.addMethods({
                 backgroundPosition:"0 -19px"
             });
             
-            var cross = new Element("td").insert("&nbsp;");
-            table.insert(tr.insert(new Element("td").setStyle({
+            var cross = new Element("td").insert("&nbsp;").setStyle({cursor:'default'});
+            tbody.insert(tr.insert(new Element("td").setStyle({
                 backgroundImage:"url("+options.imagePath+")",
                 backgroundPosition:"0 0",
-                width:"17px"
+                width:"10px"
             }).insert("&nbsp;")).insert(cont).insert(cross));
             
             cross.setStyle({
@@ -1126,6 +1295,7 @@ Element.addMethods({
             
             cross.observe("click", function(){
                 element.value="";
+                element.focus();
                 element.setStyle({color:"#333"});
                 cross.setStyle({
                     backgroundPosition:"0 -38px"
@@ -1202,4 +1372,3 @@ window.alert = function(){
     _alert(first);
 };
 // The End... Thank you for listening
-

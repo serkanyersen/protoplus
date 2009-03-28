@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Windows</title>
+        <script type="text/javascript" src="../prototype.js"></script>
+        <script type="text/javascript" src="../protoplus.js"></script>
+        <style>
+            p{
+                width:800px;
+                text-align:justify;
+            }
+        </style>
+        <script>
+            Object.extend(document, {
+                createNewWindow: function(options){
+                    
+                    options = Object.extend({
+                        onClose:Prototype.K,
+                        height:false,
+                        width:400,
+                        title:'&nbsp;',
+                        top:'25%',
+                        left:'25%',
+                        borderWidth:15,
+                        borderColor:'#333',
+                        borderOpacity:0.3,
+                        titleClass:false,
+                        contentClass:false,
+                        closeButton:'X',
+                        openEffect:true,
+                        closeEffect:true,
+                        dim:true,
+                        dimColor:'#fff',
+                        dimOpacity:0.6
+                    }, options || {});
+                    
+                    options.width = parseInt(options.width, 10);
+                    if(options.height){
+                        options.height = parseInt(options.height, 10);
+                    }
+                    options.borderWidth = parseInt(options.borderWidth, 10);
+                    
+                    if (options.dim && !document.dimmed) {
+                        // Dimm the window background
+                        var dimmer = new Element('div');
+                        dimmer.setStyle({background:options.dimColor, position:'absolute', top:'0px', left:'0px', height:'100%', width:'100%', opacity:options.dimOpacity, zIndex:10000});
+                    }
+                    
+                    // Create window structure
+                    var win = new Element('div');
+                    var background = new Element('div');
+                    win.insert(background);                    
+                    var wrapper = new Element('div');
+                    win.insert(wrapper);
+                    var title = new Element('div');
+                    wrapper.insert(title);
+                    var tbody;
+                    var tr;
+                    var title_table = new Element('table', { width:'100%' }).insert(tbody = new Element('tbody').insert(tr = new Element('tr')));
+                    var title_text = new Element('td');
+                    var title_close = new Element('td', {width:20, align:'center'});
+                    tr.insert(title_text);
+                    tr.insert(title_close);
+                    title.insert(title_table);
+                    var content = new Element('div');
+                    wrapper.insert(content);
+                    
+                    // set styles
+                    win.setStyle({
+                        top: options.top,
+                        left: options.left,
+                        position: 'absolute',
+                        padding: options.borderWidth+'px',
+                        height: options.height !== false? options.height+'px' : false,
+                        width: options.width + 'px',
+                        zIndex: 10001
+                    });
+                    
+                    background.setStyle({
+                        height: '100%',
+                        width: '100%',
+                        background: options.borderColor,
+                        position: 'absolute',
+                        top: '0px',
+                        left: '0px',
+                        zIndex: 500,
+                        opacity: options.borderOpacity,
+                        borderRadius: '5px',
+                        '-moz-border-radius': '5px'
+                    });
+                    
+                    if(!options.titleClass){
+                        title.setStyle({
+                            background: '#fff',
+                            zIndex: 1000,
+                            position: 'relative',
+                            padding: '2px',
+                            borderBottom: '1px solid #ccc'
+                        });
+                    }else{
+                        title.addClassName(options.titleClass);
+                    }
+                    
+                    if(!options.contentClass){
+                        content.setStyle({
+                            background: '#fff',
+                            zIndex: 1000,
+                            position: 'relative',
+                            padding: '8px'
+                        });
+                    }else{
+                        content.addClassName(options.contentClass);
+                    }
+                    
+                    wrapper.setStyle({border:'1px solid #ddd'});
+                    
+                    title_text.setStyle({fontWeight:'bold', color:'#777'});
+                    
+                    title_close.setStyle({fontFamily:'Arial, Helvetica, sans-serif', color:'#aaa', cursor:'default'});
+                    
+                    // Close function
+                    var closebox = function(){ 
+                        if(options.onClose(win) !== false){
+                            var close = function(){
+                                if(dimmer){ dimmer.remove(); document.dimmed = false; }
+                                win.remove();
+                                $(document.body).setStyle({overflow:'auto'}); 
+                            }
+                            if(options.closeEffect === true){
+                                win.shift({opacity:0, duration:0.5, onEnd: close});
+                            }else{
+                                close();
+                            }
+                        }
+                    }
+                    
+                    // Set the content
+                    title_text.insert(options.title);
+                    title_close.insert(options.closeButton);
+                    title_close.onclick = closebox;
+                    content.insert(options.content);
+                    
+                    // Insert box onto screen
+                    if (options.dim && !document.dimmed) {
+                        $(document.body).insert(dimmer);
+                        document.dimmed = true;
+                    }
+                    
+                    if(options.openEffect === true){
+                        win.setStyle({opacity:0});
+                        win.shift({opacity:1, duration:0.5});
+                    }
+                    
+                    $(document.body).insert(win);
+                    $(document.body).setStyle({overflow:'hidden'});
+                    
+                    win.observe('keydown', function(){
+                        
+                    })
+                    
+                    
+                    // Center the box on screen
+                    var vp = document.viewport.getDimensions();
+                    var bvp = win.getDimensions();
+                    var top = (vp.height - bvp.height) / 2;
+                    var left = (vp.width - bvp.width) / 2;
+                    win.setStyle({top:top+"px", left:left+"px"});
+                    
+                    // Make it draggable
+                    win.draggable({handler:title_text, dragEffect:false});
+                }
+            });
+            
+            
+            document.ready(function(){
+                //$('win').draggable({handler:'title-text', dragEffect:false});
+            })
+            
+            function opn_window(other){
+                
+                if(other){
+                    document.createNewWindow({
+                        title:'Other window',
+                        content:"hello world",
+                        width:400,
+                        borderWidth:28,
+                        closeButton:'<img src="../../videoportal/memberkit/images/cross.png" height="20" >',
+                        borderColor:'#000',
+                        borderOpacity:0.6,
+                        closeEffect:false,
+                        openEffect:false,
+                        dim:false
+                    })
+                    
+                }else{
+                    
+                    document.createNewWindow({
+                        title:'Hello this is my window',
+                        content:$('text').innerHTML,
+                        width:600
+                    })
+                }
+                
+                
+            }
+            
+        </script>
+	</head>
+	<body>
+        <input type="button" value="open Window" onclick="opn_window()">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Ut dolor. Curabitur elementum quam eu mi. Sed eget ligula
+        in augue faucibus elementum! Pellentesque venenatis.
+        Quisque nec metus. Maecenas id nibh. Mauris rhoncus, nunc
+        eget feugiat tincidunt, nulla odio porta ipsum, eget
+        laoreet felis lectus eu mauris. Pellentesque mattis. Ut
+        eget elit. Sed blandit nisi. Nullam vitae sapien sit amet
+        nunc ullamcorper faucibus. Curabitur odio turpis, cursus
+        non, tristique eget, imperdiet vitae, lacus. Pellentesque
+        tellus urna, auctor eu, congue nec, pharetra et, leo.
+        Quisque at tortor. Proin lacinia volutpat arcu.
+        Pellentesque blandit. Ut rhoncus dui euismod nibh. Duis
+        volutpat ultricies justo. Aenean non erat eu lorem auctor
+        pellentesque.</p>
+
+        <p>Aliquam vestibulum diam non est. Vestibulum tellus. Nam
+        velit massa, eleifend ut, consequat congue, lacinia
+        pretium, purus? Vivamus in ante ultrices elit gravida
+        rutrum. Integer a eros ac diam hendrerit convallis! Integer
+        vulputate urna a felis. Mauris ornare nulla mollis augue.
+        Pellentesque neque lacus, egestas eu, ultrices a, dictum
+        vitae, diam. Maecenas lacinia, felis suscipit hendrerit
+        euismod; neque est malesuada diam, sit amet elementum
+        tortor leo dignissim enim. Cras interdum. Sed mi.</p>
+
+        <p>Nulla metus lacus, interdum sit amet, fringilla a,
+        imperdiet ut, nisl. Proin quam purus, ullamcorper eu,
+        commodo eget, tincidunt ut, diam. Nullam id nisl sed ligula
+        consectetur posuere. Cras id risus. Integer dictum volutpat
+        enim. Aenean lobortis arcu ut sapien. Curabitur in lorem.
+        Donec consequat nunc ultrices nibh? Suspendisse eget elit
+        ut tellus lobortis ultrices? Aliquam tellus! Class aptent
+        taciti sociosqu ad litora torquent per conubia nostra, per
+        inceptos himenaeos. Aliquam imperdiet tempor urna! In
+        volutpat mauris. Vivamus lobortis.</p>
+
+        <p id='text'>Pellentesque accumsan euismod purus. Praesent tortor
+        turpis, sagittis sit amet, venenatis vel, tincidunt eget,
+        leo! Praesent ullamcorper, urna nec venenatis suscipit,
+        lacus tellus dictum velit; et placerat libero ipsum ac
+        augue? Suspendisse luctus condimentum metus. Suspendisse
+        bibendum posuere justo. Donec eu nisl. Curabitur eleifend
+        libero quis libero. Ut risus nulla, sodales at, tempor nec,
+        sagittis nec, nulla. Vivamus ac purus? Mauris leo nulla,
+        gravida id, volutpat quis, tincidunt non, dolor. Sed
+        lobortis suscipit eros! Fusce at lorem. Nam eget ipsum eu
+        est semper dictum. Mauris vel tortor in lacus condimentum
+        dapibus. Fusce tristique diam rhoncus diam! Praesent
+        pellentesque augue quis eros. Donec ultrices. Pellentesque
+        habitant mo
+        <input type="button" value="Open Other Window" onclick="opn_window(1)">
+        </p>
+        
+        
+        
+        
+	</body>
+</html>

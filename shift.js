@@ -85,7 +85,7 @@ var Colors = {
 };
 
 Element.addMethods({
-        shift: function(element, options){
+    shift: function(element, options){
         options = Object.extend({
             duration: 1,
             onEnd: Prototype.K,
@@ -242,7 +242,6 @@ Element.addMethods({
         if(amounts.y !== undefined){
             element.scrollTop = amounts.y;
         }
-        
     },
     /**
      * Returns the scroll offset of an element
