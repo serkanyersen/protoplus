@@ -19,7 +19,7 @@
             function opn_window(other){
                 
                 if(other){
-                    document.createNewWindow({
+                   var w = document.createNewWindow({
                         title:'Other window',
                         content:"hello world",
                         width:400,
@@ -29,7 +29,15 @@
                         borderOpacity:0.6,
                         closeEffect:false,
                         openEffect:false,
-                        dim:false
+                        dim:false,
+                        buttons:[
+                            {
+                                text: "Cancel",
+                                handler: function(){
+                                    w.close();
+                                }
+                            }
+                        ]
                     })
                     
                 }else{
@@ -100,9 +108,5 @@
         habitant mo
         <input type="button" value="Open Other Window" onclick="opn_window(1)">
         </p>
-        
-        
-        
-        
 	</body>
 </html>

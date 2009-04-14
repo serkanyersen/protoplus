@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
 		<title>ChangeBackground</title>
         <script src="../prototype.js"></script>
-        <script src="../shift.js"></script>
+        <script src="../protoplus.js"></script>
         <style>
             body{
                 font-family:"Trebuchet MS";
@@ -26,35 +26,16 @@
                 padding:5px;
                 cursor:default;
             }
+            .morph{
+                height:150px; 
+                font-size:12px; 
+                width:150px; 
+                background:#FFFFE0;
+                border:5px solid #8B3A62;
+                color:#CCCCCC;
+            }
         </style>
         <script>
-            Element.addMethods({
-                hover: function(elem, over, out){
-                    $(elem).observe("mouseover", function(evt){
-                        if(typeof over == "function"){
-                            if(elem.innerHTML){
-                                if(elem.descendants().include(evt.relatedTarget)){ return true; }
-                            }
-                            over(elem, evt);
-                        }else if(typeof over == "string"){
-                            $(elem).addClassName(over);
-                        }
-                    });
-                    
-                    $(elem).observe("mouseout", function(evt){
-                        if (typeof out == "function") {
-                            if(elem.innerHTML){
-                                if(elem.descendants().include(evt.relatedTarget)){ return true; }
-                            }
-                            out(elem, evt);
-                        }else if(typeof over == "string"){
-                            $(elem).removeClassName(over);
-                        }
-                    });
-                    
-                    return elem;
-                }
-            })
             document.ready(function(){
                 $$(".overme li").each(function(td){
                     td.hover(function(){
@@ -67,7 +48,7 @@
             
             function morph(){
                 if($('morph').morphed){
-                    $('morph').shift({easing:'sineOut', duration:0.5, top:0, left:0, height:150, fontSize:15, padding:0, width:150, background:'#FFFFE0', borderWidth:5, borderColor:'#8B3A62', color:'#cccccc'});
+                    $('morph').shift({easing:'sineOut', duration:0.5, top:0, left:0, height:150, fontSize:12, padding:0, width:150, background:'#FFFFE0', borderWidth:5, borderColor:'#8B3A62', color:'#cccccc'});
                     $('morph').morphed = false;
                 }else{
                     $('morph').shift({easing:'sineOut', duration:0.5, top:100, left:150, height:200, fontSize:25, padding:8, width:450, background:'#8B0A50', borderWidth:50, borderColor:'#333333', color:'#333333'});
@@ -97,7 +78,7 @@
             <li>Over Me</li>
 	    </div>
         <div style="position:absolute; top:10px; left:350px">
-        <div onclick="morph()" style="height:150px; font-size:12px; width:150px; background:#FFFFE0;border-width:5px;border-style:solid;border-color:#8B3A62;color:#CCCCCC;" id="morph">
+        <div onclick="morph()" class="morph" id="morph">
             Click To Morph
         </div>
         </div>

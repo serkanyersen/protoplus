@@ -42,7 +42,7 @@
                 panel.undoClipping().setStyle({height:"auto"});
                 var h = panel.getHeight();
                 panel.makeClipping().setStyle({height:"20px"});
-                panel.select(".title")[0].observe("mouseover", function(){
+                panel.select(".title")[0].observe("click", function(){
                     if(timer){
                         clearTimeout(timer);
                     }
