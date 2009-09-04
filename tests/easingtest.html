@@ -32,17 +32,21 @@
                 $('test').shift({
                     top:Event.pointerY(e)-25, 
                     left:Event.pointerX(e)-25, 
-                    easing: Transitions[$('ease').getSelected().text], 
+                    easing: Protoplus.Transitions[$('ease').getSelected().text], 
                     duration: parseFloat( $('duration').getSelected().text )
                 });
             };
             
             document.ready(function(){
-                $H(Transitions).each(function(e){
-                    $('ease').insert(new Element("option", {value:e.key}).insert(e.key));
-                });
-                $('stage').observe('click', runtest);
-                $('test').draggable({revert:{easing:'elastic', duration:1.2}});
+                try{
+                    $H(Protoplus.Transitions).each(function(e){
+                        $('ease').insert(new Element("option", {value:e.key}).insert(e.key));
+                    });
+                    $('stage').observe('click', runtest);
+                    $('test').setDraggable({revert:{easing:'elastic', duration:1.2}});
+                }catch(e){
+                    console.error(e);
+                }
             });
         </script>
     </head>

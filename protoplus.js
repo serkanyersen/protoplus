@@ -65,7 +65,6 @@ Protoplus = {
          * Creates a color palette
          */        
         getPalette: function(){
-            Protoplus.Profiler.start();
             var generated = {};
             var cr = ['00', '44', '77', '99', 'BB', 'EE', 'FF'];
             var i = 0;
@@ -76,7 +75,6 @@ Protoplus = {
                     }
                 }
             }
-            Protoplus.Profiler.end();
             return generated;
         },
         /**
@@ -399,6 +397,30 @@ Element.addMethods({
         return target;
     },
     /**
+     * Selects all text in any element
+     * @param {Object} element
+     */
+    selectText: function(element){
+        if (document.selection) {
+            var r1 = document.body.createTextRange();
+            r1.moveToElementText(element);
+            r1.setEndPoint("EndToEnd", r1);
+            r1.moveStart('character', 4);
+            r1.moveEnd('character', 8);
+            r1.select();
+        }
+        else {
+            s = window.getSelection();
+            var r1 = document.createRange();
+            r1.setStartBefore(element);
+            r1.setEndAfter(element);
+            s.addRange(r1);
+        }
+        
+        return element
+    },
+    
+    /**
      * Mimics the hover effect on browsers.
      * @param {Object} elem
      * @param {Object} over
@@ -426,14 +448,6 @@ Element.addMethods({
             }
         });
         return elem;
-    },
-    /**
-     * Short hand for click event
-     * @param {Object} element
-     * @param {Object} func
-     */
-    click1: function(element, func){
-        return element.observe('click', func);
     },
     /**
      * Short hand for observe
@@ -471,6 +485,10 @@ Element.addMethods({
      */
     setText: function(element, value){
         element.innerHTML = value;
+        return element;
+    },
+    setValue: function(element, value){
+        element.value = value;
         return element;
     },
     /**
@@ -514,7 +532,7 @@ Element.addMethods({
      * @param {Object} element
      */
     remove: function(element){
-        if(element.parentNode){
+        if(element.parentNode){            
             element.parentNode.removeChild(element);
         }
         return element;
@@ -920,13 +938,12 @@ window.alert = function(){
     }
     _alert(first);
 };
-
 /**
  * UI Elements
  * document.createNewWindow => Creates a new floating window
  * Element.editable => Make the element instant editable
  * Element.tooltip => show a floating tooltip when mouse overed
- * Element.draggable => Make the element draggable
+ * Element.setDraggable => Make the element draggable
  * Element.makeSearchBox => convert normal input to a apple search box
  * Element.slider => Custom input slider
  * Element.spinner => Custom input spinner
@@ -986,8 +1003,7 @@ Object.extend(document, {
             dimColor:'#fff', // color of the dimming surface
             dimOpacity:0.6, // opacity of the dimming surface
             dynamic: true, // Update the window dynamically while dragging
-            buttons: false, // Not completed yet.
-            openFrom:false,
+            buttons: false, // 
             closeTo:false,
             buttons:false, // [ { text:'', handler:function(){} } ]
             buttonsAlign: 'right'
@@ -1004,22 +1020,24 @@ Object.extend(document, {
             background:'#FFFFFF',
             top:'25%',        // Top location
             left:'25%',       // Left location
+            winZindex: 10001,
             borderWidth:10,   // Width of the surrounding transparent border
             borderColor:'#000', // Color of the surrounding transparent border
             borderOpacity:0.3, // Opacity of the surrounding transparent border
             borderRadius: "5px", // Corner radius of the surrounding transparent border
             titleClass:false, // CSS class of the title box
             contentClass:false, // CSS class of the content box
+            buttonsClass:false, // CSS class of the buttons box
             closeButton:'X', // Close button content, can be replaced with an image
             openEffect:true, // Enable/Disable the effect on opening
             closeEffect:true, // Enable/Disable the effect on closing
             dim:true,  // Make it modal window, disable background
             modal:true, // Same as dim
             dimColor:'#fff', // color of the dimming surface
-            dimOpacity:0.6, // opacity of the dimming surface
+            dimOpacity:0.8, // opacity of the dimming surface
+            dimZindex: 10000,
             dynamic: true, // Update the window dynamically while dragging
             buttons: false, // Not completed yet.
-            openFrom:false,
             contentPadding: '8',
             closeTo:false,
             buttons:false, // [ { text:'', handler:function(){} } ]
@@ -1031,10 +1049,20 @@ Object.extend(document, {
         options.height = (options.height)? parseInt(options.height, 10) : false;
         options.borderWidth = parseInt(options.borderWidth, 10);
 
-        if (options.dim && !document.dimmed) {// Dimm the window background
+        var titleStyle   =    { background: options.titleBackground, zIndex:1000, position:'relative', padding: '2px', borderBottom: '1px solid #ccc' };
+        var dimmerStyle  =    { background:options.dimColor, height:'100%', width:'100%', position:'absolute', top:'0px', left:'0px', opacity:options.dimOpacity, zIndex:options.dimZindex };
+        var windowStyle  =    { top:options.top,left: options.left,position: 'absolute', padding: options.borderWidth+'px',height: "auto", width: options.width + 'px', zIndex: options.winZindex };
+        var buttonsStyle =    { padding: '5px', borderTop: '1px solid #ccc', background:options.buttonsBackground, zIndex:1000, position:'relative', textAlign:options.buttonsAlign };
+        var contentStyle =    { background: options.background, zIndex: 1000, height: options.height !== false? options.height+'px' : "auto", position: 'relative', padding: options.contentPadding + 'px' };
+        var wrapperStyle =    { zIndex:600, border:'1px solid #ddd' };
+        var titleTextStyle  = { fontWeight:'bold', color:'#777' };
+        var backgroundStyle = { height: '100%',width: '100%',background: options.borderColor,position: 'absolute',top: '0px',left: '0px',zIndex: 500,opacity: options.borderOpacity };
+        var titleCloseStyle = { fontFamily:'Arial, Helvetica, sans-serif', color:'#aaa', cursor:'default' };
+        
+        if (options.dim/* && !document.dimmed*/) {// Dimm the window background
             var dimmer = new Element('div');
             dimmer.onmousedown = function(){return false;}; // Disable browser's default drag and paste functionality
-            dimmer.setStyle({background:options.dimColor, position:'absolute', top:'0px', left:'0px', height:'100%', width:'100%', opacity:options.dimOpacity, zIndex:10000});
+            dimmer.setStyle(dimmerStyle);
             $(document.body).setStyle({overflow:'hidden'});
         }
 
@@ -1057,18 +1085,27 @@ Object.extend(document, {
         win.buttons = {};
         if(options.buttons && options.buttons.length > 0){
             wrapper.insert(buttons = new Element('div'));
-            buttons.setStyle({background: options.buttonsBackground, zIndex:1000, position:'relative', padding: '5px', borderTop: '1px solid #ccc', textAlign:options.buttonsAlign});
+            
+            if(!options.buttonsClass){
+                buttons.setStyle(buttonsStyle);
+            }else{
+                buttons.addClassName(options.buttonsClass);
+            }
+            
             $A(options.buttons).each(function(button){
-                var but = new Element('input', {className:'window-buttons', type:'button', value:button.title}).observe('click', function(){
+                
+                var but = new Element('input', {className:'window-buttons', type:'button', name:button.name, value:button.title}).observe('click', function(){
                     button.handler(win, but);
                 });
-                win.buttons[button.title] = but;
-                if(button.disabled){
-                    but.disable();
-                }
+                
+                win.buttons[button.name] = but;
+                
+                if(button.disabled){ but.disable(); }
+                
                 if(button.style){
                     but.setStyle(button.style);
                 }
+                
                 buttons.insert('&nbsp;');
                 buttons.insert(but);
                 buttons.insert('&nbsp;');
@@ -1076,27 +1113,25 @@ Object.extend(document, {
         }
 
         // set styles
-        win.setStyle({top: options.top,left: options.left,position: 'absolute',padding: options.borderWidth+'px',height: "auto", width: options.width + 'px',zIndex: 10001});
+        win.setStyle(windowStyle);
 
-        background.setStyle({
-            height: '100%',width: '100%',background: options.borderColor,position: 'absolute',top: '0px',left: '0px',zIndex: 500,opacity: options.borderOpacity
-        }).setCSSBorderRadius(options.borderRadius);
+        background.setStyle(backgroundStyle).setCSSBorderRadius(options.borderRadius);
 
         if(!options.titleClass){
-            title.setStyle({background: options.titleBackground, zIndex:1000, position:'relative', padding: '2px', borderBottom: '1px solid #ccc'});
+            title.setStyle(titleStyle);
         }else{
             title.addClassName(options.titleClass);
         }
 
         if(!options.contentClass){
-            content.setStyle({ background: options.background, zIndex: 1000, height: options.height !== false? options.height+'px' : "auto", position: 'relative', padding: options.contentPadding + 'px' }).addClassName('window-content');
+            content.setStyle(contentStyle).addClassName('window-content');
         }else{
             content.addClassName(options.contentClass);
         }
 
-        wrapper.setStyle({zIndex:600, border:'1px solid #ddd'});
-        title_text.setStyle({fontWeight:'bold', color:'#777'});                    
-        title_close.setStyle({fontFamily:'Arial, Helvetica, sans-serif', color:'#aaa', cursor:'default'});
+        wrapper.setStyle(wrapperStyle);
+        title_text.setStyle(titleTextStyle);
+        title_close.setStyle(titleCloseStyle);
 
         var closebox = function(){ // Close function
             if(options.onClose(win) !== false){
@@ -1110,12 +1145,13 @@ Object.extend(document, {
                 }else{
                     close();
                 }
+                Event.stopObserving(window, 'resize', win.reCenter);
+                document.stopObserving('keyup', escClose);
             }
-            document.stopObserving('keyup', escClose);
         };
         var escClose = function(e){ if(e.keyCode == 27){ closebox(); } };
         // Insert box onto screen
-        if (options.dim && !document.dimmed) {
+        if (options.dim /*&& !document.dimmed*/) {
             $(document.body).insert(dimmer);
             document.dimmed = true;
         }
@@ -1127,33 +1163,39 @@ Object.extend(document, {
         content.insert(options.content);
         
         $(document.body).insert(win);
-        options.onInsert(win);
-//        options.openFrom = false;
-        if(/*!options.openFrom &&*/ options.openEffect === true){
+        if(options.openEffect === true){
             win.setStyle({opacity:0});
             win.shift({opacity:1, duration:0.5});
         }
         
         // Center the box on screen
         var vp = document.viewport.getDimensions();
+        var vso = $(document.body).cumulativeScrollOffset();
         var bvp = win.getDimensions();
-        var top = (vp.height - bvp.height) / 2;
-        var left = (vp.width - bvp.width) / 2;
+        var top = ((vp.height - bvp.height) / 2) + vso.top;
+        var left = ((vp.width - bvp.width) / 2) + vso.left;
         
-        if(options.openFrom){
-            var oOffsets = $(options.openFrom).cumulativeOffset();
-            var winH = win.getHeight()-(options.borderWidth*2);
-            win.setStyle({top:oOffsets.top+"px", left:oOffsets.left+"px", height:'0px', width:'0px', overflow:'hidden'});
+        options.onInsert(win);
+        
+        if(dimmer){
+            dimmer.setStyle({height:vp.height+'px', width:vp.width+'px', top:vso.top+'px', left:vso.left+'px'  });
         }
         
-        if (options.openFrom) {
-            win.shift({top:top, left:left, height:winH, width:options.width, opacity:1, duration:1, onEnd:function(){
-                options.onDisplay(win);
-            }});
-        }else{
+        win.setStyle({top:top+"px", left:left+"px"});
+        
+        win.reCenter = function(){
+            var vp = document.viewport.getDimensions();
+            var vso = $(document.body).cumulativeScrollOffset();
+            var bvp = win.getDimensions();
+            var top = ((vp.height - bvp.height) / 2) + vso.top;
+            var left = ((vp.width - bvp.width) / 2) + vso.left;
             win.setStyle({top:top+"px", left:left+"px"});
-            options.onDisplay(win);
+            dimmer.setStyle({height:vp.height+'px', width:vp.width+'px', top:vso.top+'px', left:vso.left+'px'  });
         }
+        
+        options.onDisplay(win);
+        
+        Event.observe(window, 'resize', win.reCenter);
         
         if(options.resizable){
             wrapper.resizable({
@@ -1174,7 +1216,7 @@ Object.extend(document, {
         }
         document.observe('keyup', escClose); // Close the window when ESC is pressed
         // Make it draggable
-        win.draggable({handler:title_text, constrainViewport:true, dynamic:options.dynamic, dragEffect:false});
+        win.setDraggable({handler:title_text, constrainViewport:true, dynamic:options.dynamic, dragEffect:false});
         win.close = closebox;
         return win;
     }
@@ -1458,6 +1500,8 @@ Element.addMethods({
      * @param {Object} options
      */
     tooltip: function(element, text, options){
+		// removed for whatever..
+		// return element;
         if(typeof text != "string"){ return element; }
         options = Object.extend({
             className: false,
@@ -1521,7 +1565,16 @@ Element.addMethods({
                 outer.appendChild(shadow);
             }
             outer.appendChild(tooldiv);
-
+            
+            var removeButton = new Element('div');
+            removeButton.innerHTML = 'X';
+            removeButton.setStyle({ cursor:'pointer', border:'1px solid #666', background:'#cecece', textAlign:'center', top:'1px', width:'15px', position:'absolute', right:'1px', zIndex:1000 });
+            removeButton.setCSSBorderRadius('4px');
+            tooldiv.appendChild(removeButton);
+            removeButton.observe('click', function(){
+                outer.parentNode.removeChild(outer);
+            });
+            
             var makeItAppear = function(){
                 if (options.fixed) {
                     var fixTop = options.fixed.top? parseInt(options.fixed.top, 10) : element.getHeight();
@@ -1566,6 +1619,7 @@ Element.addMethods({
                 }
             }, options.delay*1000 || 0);
         },function(){
+
             if(document.stopTooltip){ 
                 $$(".pp_tooltip_").each(function(t){ t.remove(); });
                 return true; 
@@ -1587,7 +1641,7 @@ Element.addMethods({
      * @param {Object} element
      * @param {Object} options
      */
-    draggable:function(element, options){
+    setDraggable:function(element, options){
         options = Object.extend({
             dragClass: "",  
             handler: false, 
@@ -1728,7 +1782,7 @@ Element.addMethods({
             }
             
             if(options.constrainViewport){ 
-                voff = {top:0, left:0};
+                voff = $(document.body).cumulativeScrollOffset(); //{top:0, left:0};
                 vdim = document.viewport.getDimensions(); 
             }
             
@@ -2092,7 +2146,7 @@ Element.addMethods({
         tr2.insert(startTD).insert(statTD).insert(endTD);
         
         // Set button draggable
-        sliderButton.draggable({constraint:'horizontal', /*snap:10,*/ dragEffect:false, cursor:'default', constrainLeft:3, constrainRight:barWidth, onDrag:function(i){
+        sliderButton.setDraggable({constraint:'horizontal', /*snap:10,*/ dragEffect:false, cursor:'default', constrainLeft:3, constrainRight:barWidth, onDrag:function(i){
             updateValue(i.getStyle('left')); // Calculate the amount while dragging
         }});
         
@@ -2137,7 +2191,7 @@ Element.addMethods({
      */
     spinner: function(element, options){
         options = Object.extend({
-            width:false,
+            width:60,
             cssFloat:false,
             allowNegative:false,
             addAmount:1,
@@ -2165,13 +2219,13 @@ Element.addMethods({
         if(options.cssFloat){
             spinnerContainer.setStyle({cssFloat:options.cssFloat});
         }
-        if(options.width){
-            spinnerContainer.setStyle({width:options.width+"px"});
-        }
+        
+        spinnerContainer.setStyle({width:options.width+"px"});
+        
         
         var spinnerTable, tbody, tr, tr2, inputTD, upTD, downTD; // define values
         
-        spinnerTable = new Element('table', {cellpadding:0, cellspacing:0, border:0, height:20});
+        spinnerTable = new Element('table', {cellpadding:0, cellspacing:0, border:0, height:20, width:options.width, background:'#fff'});
         tbody = new Element('tbody').insert(tr = new Element('tr'));
         
         spinnerContainer.insert(spinnerTable);
@@ -2269,9 +2323,12 @@ Element.addMethods({
         }
         
         element.observe('click', function(){
+            
             if(options.onStart() === false){ // User may want to check before open the box
+                element.colorPickerEnabled = false;
                 return element;
             };
+
             var validCSSColors =  Protoplus.Colors.getPalette(); // */ sortColors(Protoplus.Colors.colorNames);
             //$R(1, 7).each(function(i){ validCSSColors['blank'+i] = false; }); // Add blank colors
             if(element.colorPickerEnabled){ return false; }
@@ -2282,7 +2339,8 @@ Element.addMethods({
             }else{
                 table.setStyle({background:options.background,outline:'1px solid #aaa',border:'1px solid #fff'});
             }
-            tbody.insert(tr = new Element('tr').insert(new Element('th', {className:'titleHandler', height: '10'}).setText(options.title).setStyle({paddingTop:'2px', paddingBottom:'0px', color:'#333', fontSize:'14px'})))
+            
+            tbody.insert(tr = new Element('tr').insert(new Element('th', {className:'titleHandler', colspan:'2', height: '10'}).setText(options.title).setStyle({paddingTop:'2px', paddingBottom:'0px', color:'#333', fontSize:'14px'})))
                  .insert(colorTR = new Element('tr')).insert(selectTR = new Element('tr'));
     
             colorTR.insert(colorTD = new Element('td'));
@@ -2382,10 +2440,13 @@ Element.addMethods({
             var left = element.cumulativeOffset().left;
             table.setStyle({position:'absolute', top:top + 3 +"px", left:left + 2 +'px'});
             
-            table.draggable({handler: table.select('.titleHandler')[0] , dragEffect:false});
-            $(document.body).insert(table);
-            overFlowDiv.setScroll({y:'0'});
+            table.setDraggable({handler: table.select('.titleHandler')[0] , dragEffect:false});
             
+            $(document.body).insert(table);
+            
+            options.onEnd(element, table);
+            
+            overFlowDiv.setScroll({y:'0'});
             element.colorPickerEnabled = true;
         });
         return element;
@@ -2401,7 +2462,8 @@ Element.addMethods({
             position: 'bottom',
             color: '#666',
             size: 9,
-            text:''
+            text:'',
+            nobr: false
         }, options || {});
         element.wrap('span');
         span = $(element.parentNode);
@@ -2410,11 +2472,16 @@ Element.addMethods({
         var labelClick = function(){
             element.focus();
         };
+        var br = '<br>';
+        
+        if(options.nobr){
+            br = '';
+        }
         
         if(options.position == "top"){
-            element.insert({before:new Element('span').setText(label+'<br>').setStyle(labelStyle).observe('click', labelClick)}).insert({after:options.text});
+            element.insert({before:new Element('span').setText(label+br).setStyle(labelStyle).observe('click', labelClick)}).insert({after:options.text});
         }else{
-            element.insert({after:new Element('span').setText('<br>'+label).setStyle(labelStyle).observe('click', labelClick)}).insert({after:options.text});
+            element.insert({after:new Element('span').setText(br+label).setStyle(labelStyle).observe('click', labelClick)}).insert({after:options.text});
         }
         
         return span;
@@ -2424,20 +2491,19 @@ Element.addMethods({
      * @param {Object} element
      * @param {Object} value
      */
-    hint: function(element, options){
-        var value = "";
-        if(typeof options == "string"){
-            value = options;
-            options = Object.extend({
-                hintColor:'#999'
-            }, {});
-        }
+    hint: function(element, value, options){
+
+        options = Object.extend({
+            hintColor:'#999'
+        }, options || {});
         
         var color = element.getStyle('color') || '#000';
         
-        element.setStyle({color:'#999'});
-        element.value = value;
-        element.hinted = true;
+        if (element.value == '') {
+            element.setStyle({color:options.hintColor});
+            element.value = value;
+            element.hinted = true;
+        }
         
         element.observe('focus', function(){
             if(element.value == value){
@@ -2449,7 +2515,7 @@ Element.addMethods({
         element.observe('blur', function(){
             if(element.value === ""){
                 element.value = value;
-                element.setStyle({ color:'#999' }).hinted = true;
+                element.setStyle({ color:options.hintColor }).hinted = true;
             }
         });
         
@@ -2464,7 +2530,7 @@ Element.addMethods({
         
         element.hintClear = function(){
             element.value = value;
-            element.setStyle({ color:'#999' }).hinted = true;
+            element.setStyle({ color:options.hintColor }).hinted = true;
         };
         
         return element;
@@ -2623,6 +2689,74 @@ Element.addMethods({
         
         return handlerElem;
     },
+    positionFixed: function(element, options){
+        
+        options = Object.extend({
+            offset: 10, // left, top
+            onPinned: Prototype.K,
+            onUnpinned: Prototype.K,
+            onBeforeScroll: Prototype.K,
+            onScroll: Prototype.K
+        }, options || {});
+        
+        var off  = element.cumulativeOffset();
+        var sOff = element.cumulativeScrollOffset();
+        var top = off.top + sOff.top;
+        var left = off.left + sOff.left;
+        
+        var onScroll = function(arguments){
+            if(element.pinned){ return true; }
+            
+            var style = {};
+            var bodyOff = $(document.body).cumulativeScrollOffset();
+            //if(sOff.top < options.offset){ options.offset = sOff.top; }
+            
+            if(top <= bodyOff.top + options.offset){
+                style = {position:'fixed', top: options.offset+'px'};
+            }else{
+                style = {position:'absolute', top:top+'px'};
+            }
+        
+            if(options.onBeforeScroll(element, style.top, bodyOff.top) !== false){
+                element.setStyle(style);
+                options.onScroll(element, bodyOff.top);
+            }
+        }
+        
+        // Pins the element where it is located
+        element.pin = function(){
+            var bodyOff = $(document.body).cumulativeScrollOffset();
+            element.style.top = bodyOff.top + options.offset + 'px';
+            element.style.position = 'absolute';
+            options.onPinned(element);  
+            element.pinned = true; 
+        };
+        
+        // Check if the element is pinned
+        element.isPinned = function(){ options.onPinned(element); return element.pinned; };
+        
+        // Sets the element free
+        element.unpin = function(){
+            element.pinned = false;
+            // Run the scroll Event when unpinned
+            onScroll();
+            options.onUnpinned(element);
+        };
+        
+        element.updateScroll = onScroll;
+        
+        /**
+         * Updates the max and left limits. Suitable for draggable elements
+         */
+        element.updateTop = function(topLimit){
+            top = topLimit;
+            return element;
+        };
+        
+        // Set the scroll Event
+        Event.observe(window, 'scroll', onScroll);
+        return element;
+    },
     /**
      * Keeps the element in viewport when the page is scrolled
      * @param {Object} element
@@ -2651,10 +2785,6 @@ Element.addMethods({
         options.animation = Object.extend({ duration: 0.4 }, options.animation || {});
         options.delay *= 1000;
         
-        if(options.smooth === false){
-            options.delay = 0;
-        }
-        
         if(typeof options.offset == 'number'){
             options.offsetLeft = options.offset;
             options.offsetTop = options.offset;
@@ -2671,11 +2801,13 @@ Element.addMethods({
             
             var anim = options.animation;
             
-            timer = setTimeout(function(){
-                var off = /* {top: element.scrollTop || 0, left:element.scrollLeft || 0}; // */ element.cumulativeOffset();
+            var doScroll = function(){
+                
+                var off  = /* {top: element.scrollTop || 0, left:element.scrollLeft || 0}; // */ element.cumulativeOffset();
                 var sOff = /* {top:window.scrollY || 0, left:window.scrollX || 0}; // */ element.cumulativeScrollOffset();
                 var toff = options.offsetTop;
                 var loff = options.offsetLeft;
+                
                 if(sOff.top < toff){ toff = sOff.top; }
                 if(sOff.left < loff){ loff = sOff.left; }
                 
@@ -2694,6 +2826,7 @@ Element.addMethods({
                         }
                     }
                 }
+                
                 if(options.horizontal){
                     if(sOff.left >= off.left - loff){
                         if(sOff.left > 0){
@@ -2709,6 +2842,7 @@ Element.addMethods({
                         }
                     }
                 }
+                
                 if (options.onBeforeScroll(element, parseInt(anim.top, 10) || 0, parseInt(anim.left, 10) || 0) !== false) {
                     // Move the elements
                     if (options.smooth) {
@@ -2720,7 +2854,15 @@ Element.addMethods({
                         options.onScroll(element, anim.top, anim.left);
                     }
                 }
-            }, options.delay);
+            };
+            
+            
+            if (options.smooth === false) {
+                doScroll();
+            }else{
+                timer = setTimeout(doScroll, options.delay);
+            } 
+            return element;
         };
         
         // Pins the element where it is located
@@ -2735,18 +2877,57 @@ Element.addMethods({
             options.onUnpinned(element);
         };
         
+        element.update = onScroll;
+        
         /**
          * Updates the max and left limits. Suitable for draggable elements
          */
-        element.updateLimits = function(){
-            options.topLimit = parseInt(element.getStyle('top') || 0, 10);
-            options.leftLimit = parseInt(element.getStyle('left') || 0, 10);
+        element.updateLimits = function(top, left){
+            options.topLimit = top || parseInt(element.getStyle('top') || 0, 10);
+            options.leftLimit = left || parseInt(element.getStyle('left') || 0, 10);
             return element;
         };
         // Set the scroll Event
         Event.observe(window, 'scroll', onScroll);
+        
         return element;
-    }
+    },
+	
+	rotatingText: function(element, text, options) {
+		options = Object.extend({
+			delimiter: ' - ',
+			duration: 150
+		}, options || {});
+		
+		var orgText = element.innerHTML.strip();
+		text += options.delimiter;
+		
+		var orgLength = orgText.length;
+		var initialText = text.substr(0, orgLength);
+		element.innerHTML = initialText;
+		var current = 0;
+		var interval = setInterval(function() {
+			if (current == text.length) {
+				current = 0;
+				element.innerHTML = text.substr(current++, orgLength);
+			}
+			else if (current + orgLength > text.length) {
+				var toInsert = text.substr(current, orgLength);
+				// toInsert += "-" + text.substr(0, orgLength - (text.length - current - 1));
+				toInsert += text.substr(0, orgLength - (text.length - current));
+				element.innerHTML = toInsert;
+				current++;
+			}
+			else { // current + orgLength
+				element.innerHTML = text.substr(current++, orgLength);
+			}
+		}, options.duration);
+		element.rotatingStop = function() {
+			clearTimeout(interval);
+			element.innerHTML = orgText;
+		};
+		return element;
+	}
 });
 
 // The End... Thank you for listening
