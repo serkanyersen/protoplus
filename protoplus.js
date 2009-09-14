@@ -1849,26 +1849,27 @@ Element.addMethods({
         options = Object.extend({
             imagePath: "stars.png",
             onRate: Prototype.K,
-            disable: false,
             disabled: element.getAttribute("disabled")? element.getAttribute("disabled") : false,
             stars: element.getAttribute("stars")? element.getAttribute("stars") : 5,
             name: element.getAttribute("name")? element.getAttribute("name") : "rating",
             value: element.getAttribute("value")? element.getAttribute("value") : 0
         }, options || {});
-
-        if(element.converted){
-           return element;
-        }
+        
+        // Don't allow element to be starred again
+        if(element.converted){ return element; }
 
         element.converted = true;
 
         var image = { blank: "0px 0px", over: "-16px 0px", clicked: "-32px 0px", half: "-48px 0px" };
         var hidden = new Element("input", {type:"hidden", name:options.name});
         var stardivs = $A([]);
-
-        element.disabled = (options.disabled=="true")? true : false;
-        element.setStyle({width:(options.stars*20)+"px", cursor:options.disabled? "default" : "pointer"/*, clear:"left"*/});
+        
+        // Make Element Disabled
+        element.disabled = (options.disabled=="true" || options.disabled === true)? true : false;
+        
+        element.setStyle({width:(options.stars*20)+"px", cursor:options.disabled? "default" : "pointer" /*, clear:"left"*/});
         element.unselectable();
+        
         $A($R(1, options.stars)).each(function(i){
             var star = new Element("div").setStyle({height:"16px", width:"16px", margin:"0.5px", cssFloat:"left", backgroundImage:"url("+options.imagePath+")"});
             star.observe("mouseover", function(){
