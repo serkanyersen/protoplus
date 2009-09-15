@@ -1849,6 +1849,11 @@ Element.addMethods({
         options = Object.extend({
             imagePath: "stars.png",
             onRate: Prototype.K,
+            resetButtonImage:false,
+            resetButtonTitle: 'Cancel Your Rating',
+            resetButton:true,
+            titles: [], // Give an array of titles for corresponding stars
+            disable:false, // Disable element just after user gives a rating.
             disabled: element.getAttribute("disabled")? element.getAttribute("disabled") : false,
             stars: element.getAttribute("stars")? element.getAttribute("stars") : 5,
             name: element.getAttribute("name")? element.getAttribute("name") : "rating",
@@ -1867,8 +1872,30 @@ Element.addMethods({
         // Make Element Disabled
         element.disabled = (options.disabled=="true" || options.disabled === true)? true : false;
         
-        element.setStyle({width:(options.stars*20)+"px", cursor:options.disabled? "default" : "pointer" /*, clear:"left"*/});
+        element.setStyle({
+            width: ((options.stars + ( /* add place for reset button */ options.resetButton ? 1 : 0)) * 20) + "px",
+            cursor: options.disabled ? "default" : "pointer" /*, clear:"left"*/
+        });
         element.unselectable();
+        
+        var setStar = function(i){            
+            var desc = $A(element.descendants());
+            desc.each(function(e){ e.setStyle({ backgroundPosition:image.blank}).removeClassName("rated"); });
+            desc.each(function(e, c){ if(c < i){ e.setStyle({backgroundPosition:image.clicked}).addClassName("rated"); } });
+            hidden.value = i;
+            if(options.disable){
+                element.disabled = true;
+                element.setStyle({cursor:"default"});
+            }
+            options.onRate(element, options.name, i);
+            if(options.resetButton){
+                cross[ (i == 0)? "hide" : "show" ](); // Show or hide the resetButton
+            }
+        }
+        /**
+         * External method for setting the rating manually
+         */
+        element.setRating = setStar;
         
         $A($R(1, options.stars)).each(function(i){
             var star = new Element("div").setStyle({height:"16px", width:"16px", margin:"0.5px", cssFloat:"left", backgroundImage:"url("+options.imagePath+")"});
@@ -1879,18 +1906,12 @@ Element.addMethods({
                 }
             }).observe("click", function(){
                 if (!element.disabled) {
-                    var desc = $A(element.descendants());
-                    desc.each(function(e){ e.setStyle({backgroundPosition:image.blank}).removeClassName("rated"); });
-                    desc.each(function(e, c){ if(c < i){ e.setStyle({backgroundPosition:image.clicked}).addClassName("rated"); } });
-                    hidden.value = i;
-                    if(options.disable){
-                      element.disabled = true;
-                      element.setStyle({cursor:"default"});
-                    }
-                    options.onRate(element, options.name, i);
+                    setStar(i);
                 }
             });
-
+            if(options.titles && options.titles[i-1]){
+                star.title = options.titles[i-1]; 
+            }
             stardivs.push(star);
         });
 
@@ -1903,6 +1924,22 @@ Element.addMethods({
                 });
             });
         }
+        
+        if(options.resetButton){
+            var cross = new Element("div").setStyle({height:"16px", width:"16px", margin:"0.5px", cssFloat:"left", color:'#999', textAlign:'center'});
+            if(options.resetButtonImage){
+                cross.insert(new Element('img', {src:options.resetButtonImage, align:'absmiddle'}));
+            }else{
+                cross.insert(' x ');
+            }
+            cross.title = options.resetButtonTitle;
+            cross.hide();
+            cross.observe('click', function(){
+                setStar(0);
+            })
+            stardivs.push(cross);
+        }
+        
         stardivs.each(function(star){ element.insert(star); });
         element.insert(hidden);
         if(options.value > 0){
