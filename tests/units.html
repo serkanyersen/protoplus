@@ -23,7 +23,9 @@
             document.ready(function(){
                 $$(".dd").each(function(div){
                     div.observe('click', function(){
-                        div.shift({width:100, duration:1, easing:'pulse', background:'#FFFFE0', link:'ignore'});
+                        div.shift({width:100, duration:2, easing:'pulse', background:'#FFFFE0', onStep:function(){
+                            div.innerHTML = div.style.width;
+                        }, link:'ignore'});
                     })
                 })
             })

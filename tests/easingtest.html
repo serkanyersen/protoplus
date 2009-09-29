@@ -5,12 +5,15 @@
         <script type="text/javascript" src="../prototype.js"></script>
         <script type="text/javascript" src="../protoplus.js"></script>
         <style type="text/css">
-            
+            body{
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+                font-size:11px;
+            }
             #stage {
                 width: 600px;
                 height: 475px;
                 border:1px solid #333;
-                background:#aaa;
+                
                 -moz-border-radius:10px 10px 10px 10px;
                 -webkit-border-radius:10px 10px 10px 10px;
             }
@@ -40,7 +43,24 @@
                     duration: parseFloat( $('duration').getSelected().text )
                 });
             };
-            
+            var back = '#aaaaaa';
+            function backToggle(){
+                back = (back == '#aaaaaa')? '#f5f5f5' : '#aaaaaa';
+                $('stage').shift({
+                    background:back, 
+                    easing: Protoplus.Transitions[$('ease').getSelected().text], 
+                    duration: parseFloat( $('duration').getSelected().text )
+                });
+            }
+            var op = 1;
+            function opacityToggle(){
+                op = (op == 1)? 0.2 : 1;
+                $('test').shift({
+                    opacity:op, 
+                    easing: Protoplus.Transitions[$('ease').getSelected().text], 
+                    duration: parseFloat( $('duration').getSelected().text )
+                });
+            }
             document.ready(function(){
                 try{
                     $H(Protoplus.Transitions).each(function(e){
@@ -60,7 +80,7 @@
             <tr>
                 <td width="80" height="25">Easing:</td>
                 <td width="100"><select id="ease"> </select></td>
-                <td width="180">Duration (seconds):</td>
+                <td width="120">Duration (seconds):</td>
                 <td><select id="duration">
                         <option>0.2</option>
                         <option>0.5</option>
@@ -69,11 +89,18 @@
                         <option>3</option>
                         <option>4</option>
                     </select>
-                </td></tr>
+                </td>
+                <td>
+                    <button onclick="backToggle()">Background Toggle</button>
+                </td>
+                <td>
+                    <button onclick="opacityToggle()">Opacity Toggle</button>
+                </td>
+            </tr>
             <tr>
-                <td colspan="4" valign="top">
-                    <div onmousedown="return false;" id="stage"></div>
-                    <div id="test"></div>
+                <td colspan="6" valign="top">
+                    <div onmousemove="return false;" onmousedown="return false;" id="stage" style="background:#aaa;"></div>
+                    <div id="test" onmousemove="return false;" onmousedown="return false;"></div>
                 </td>
             </tr>
         </table>

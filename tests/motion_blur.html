@@ -32,7 +32,7 @@
 		</style>
 		<script>
 			document.ready(function(){
-				$("move").draggable({dragEffect:false, onDrag: function(){
+				$("move").setDraggable({dragEffect:false, onDrag: function(){
     					$("move").addClassName("pmp_motion");
     				},
     				onDragEnd: function(){
@@ -40,7 +40,7 @@
     				}
 				});
 				
-				$("move2").draggable();
+				$("move2").setDraggable();
 			})
 		</script>
 	</head>

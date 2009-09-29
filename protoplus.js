@@ -24,6 +24,8 @@ Protoplus = {
     exec: function(code){
         return eval(code); // I have had this 'eval is evil' message
     },
+    REFIDCOUNT: 100, // Reference ID
+    references:{}, // Hold references
     /**
      * Easing functions for animation effects
      * @param {Object} x
@@ -141,38 +143,32 @@ Protoplus = {
      * @param {Object} title
      */
     Profiler: {
-        stime:0,
-        etime:0,
-        title:'',
-        result:0,
+        stimes:{},
         /**
          * Start the profile
          * @param {Object} title Title of the process in order to recognize later
          */
         start: function(title){
-            Protoplus.Profiler.stime = new Date();
-            Protoplus.Profiler.title = title || "Process";
+            Protoplus.Profiler.stimes[title] = (new Date()).getTime();
+                        
             //console.profile(Protoplus.Profiler.title);
         },
         /**
          * Finish and print the result of the profiler
          */
-        end:function(){
-            Protoplus.Profiler.etime = new Date();
-            Protoplus.Profiler.result = Protoplus.Profiler.etime - Protoplus.Profiler.stime;
-            if(Protoplus.Profiler.result > 10){
-               Protoplus.Profiler.result -= 10 // Remove 10, latency of Profiler function itself
+        end:function(title, ret){
+            var res = ( ( (new Date()).getTime() - Protoplus.Profiler.stimes[title])/1000).toFixed(3);
+            if(ret){
+                return res;
             }
-            // console.profileEnd();
-            var msg = Protoplus.Profiler.title+' took <b>'+Protoplus.Profiler.result+"</b>ms";
-            if($('diag')){
-                $('diag').update(msg);
+            msg = title+' took '+res;
+            
+            if('console' in window/* && !console.fake*/){
+                console.info(msg);
             }else{
-                if('console' in window){
-                    console.info(msg);
-                }
+                console.log("ss");
+                Debug.echo(msg);
             }
-           
         }
     }
 };
@@ -224,6 +220,31 @@ Object.extend(String.prototype, {
         var sh = this.substr(0, length);
         sh += (this.length > length)? closure : "";
         return sh;
+    },
+    printf: function(){
+        var args = arguments;
+        var word = this.toString(), 
+        i = 0;
+         
+        return word.replace(/(\%(.))/gim, function(word, match, tag, count){
+            var s = args[i] !== undefined? args[i] : '' ;
+            i++;
+            switch(tag){
+                case "f":
+                    return parseFloat(s).toFixed(2);
+                case "d":
+                    return parseInt(s, 10);
+                case "x":
+                    return s.toString(16);
+                case "X":
+                    return s.toString(16).toUpperCase();
+                case "s":
+                    return s;
+                default:
+                    return match;
+            }            
+        });
+        return word;
     }
 });
 
@@ -344,10 +365,7 @@ Object.extend(Event, {
     }
 });
 
-/**
- * @extends DOM
- */
-Element.addMethods({
+Protoplus.utils = {
     /**
      * Determines if the passed element is overflowing its bounds,
      * either vertically or horizontally.
@@ -528,16 +546,6 @@ Element.addMethods({
         return selected;
     },
     /**
-     * Safe remove function
-     * @param {Object} element
-     */
-    remove: function(element){
-        if(element.parentNode){            
-            element.parentNode.removeChild(element);
-        }
-        return element;
-    },
-    /**
      * Selects the option of an element
      * @param {Object} element
      * @param {Object} val
@@ -554,6 +562,9 @@ Element.addMethods({
      * Makes animation for given attribute. This function can animate every attribute with the numeric values it can also animate color values and scroll amounts.
      * @param {Object} element
      * @param {Object} options
+     * Profile (51.4ms, 3576 calls)
+     * Profile (43.127ms, 3604 calls)
+     * Profile (42.651ms, 3568 calls)
      */
     shift: function(element, options){
         options = Object.extend({
@@ -584,6 +595,9 @@ Element.addMethods({
         if (element.timer){ // cancel the old animation
             clearInterval(element.timer); 
         }
+        if (element.delayTime){
+            clearTimeout(element.delayTime);
+        }
 
         if(typeof options.easing == 'string'){
             if(options.easing in Protoplus.Transitions){
@@ -598,56 +612,75 @@ Element.addMethods({
         options.duration *= 1000; // convert to milliseconds
         options.delay *= 1000; // convert to milliseconds
         element.timer = false;
-        var properties = {};
-
-        // Fill properties array with necessary items, Remove other ones
-        $H(options).each(function(option){
-            if (!["duration", "onStart", "onStep", "onEnd", "remove", "easing", "link", "easingCustom"].include(option.key) && option.value !== false) {
-                properties[option.key] = option.value;
-            }
-        });
-
+        
+        var properties = {}, begin, end, 
+        /**
+         * initiates the duration and call on start event
+         */
+        init = function(){
+            begin = new Date().getTime();
+            end = begin + options.duration;
+            options.onStart(element);
+        }
+        
+        
+        for(var x in options){
+            if (!["duration", "onStart", "onStep", "onEnd", "remove", "easing", "link", "delay", "easingCustom"].include(x) && options[x] !== false) {
+                properties[x] = options[x];
+            }            
+        }
+        
+        var unitRex=/\d+([a-zA-Z%]+)$/;
+        
         // Prepare and define values for animation.
-        $H(properties).each(function(option){
+        for(var i in properties){
+            var okey = i, oval=properties[i];
             var to, from, key, unit, s = [];
-            if (["scrollX", "scrollLeft", "scrollY", "scrollTop"].include(option.key)) {
-                to = parseFloat(option.value);
-                key = (option.key == "scrollX")? "scrollLeft" : (option.key == "scrollY")? "scrollTop" : option.key;
+            
+            if (["scrollX", "scrollLeft", "scrollY", "scrollTop"].include(okey)) {
+                to = parseFloat(oval);
+                key = (okey == "scrollX")? "scrollLeft" : (okey == "scrollY")? "scrollTop" : okey;
                 if(element.tagName == "BODY"){
-                    from = (["scrollX", "scrollLeft"].include(option.key))? window.scrollX : window.scrollY; // Read the window scroll
+                    from = (okey in ["scrollX", "scrollLeft"])? window.scrollX : window.scrollY; // Read the window scroll
                 }else{
-                    from = (["scrollX", "scrollLeft"].include(option.key))? element.getScroll().x : element.getScroll().y;
+                    from = (okey in ["scrollX", "scrollLeft"])? Element.getScroll(element).x : Element.getScroll(element).y;
                 }
                 unit = '';
-            }else if (option.key == "rotate"){
-                to = parseFloat(option.value);
+            } else if (okey == "rotate"){
+                to = parseFloat(oval);
                 key = "-webkit-transform";
-                from = element.getStyle('-webkit-transform')? parseInt(element.getStyle('-webkit-transform').replace(/rotate\(|\)/gim, ""), 10) : 0;
+                from = Element.getStyle(element, '-webkit-transform')? parseInt(Element.getStyle(element, '-webkit-transform').replace(/rotate\(|\)/gim, ""), 10) : 0;
                 unit = 'deg';
-            }else if (["background", "color", "borderColor", "backgroundColor"].include(option.key)) {
-                to = Protoplus.Colors.hexToRgb(option.value);
-                key = option.key == "background" ? "backgroundColor" : option.key;
-                from = Protoplus.Colors.getRGBarray(element.getStyle(key) || "");
+            } else if (["background", "color", "borderColor", "backgroundColor"].include(okey)) {
+                to = Protoplus.Colors.hexToRgb(oval);
+                key = okey == "background" ? "backgroundColor" : okey;
+                from = Protoplus.Colors.getRGBarray(Element.getStyle(element, key) || "");
                 unit = '';
+            } else if(okey == "opacity"){
+                to = (typeof oval == "string") ? parseInt(oval, 10) : oval;
+                key = okey;
+                from = Element.getStyle(element, okey);
+                unit = '';
+                from = parseFloat(from);
+            
             } else {
-                to = (typeof option.value == "string") ? parseInt(option.value, 10) : option.value;
-                key = option.key;
-                from = element.getStyle(option.key.replace("-webkit-", "").replace("-moz-", "")) || "0px";
-                unit = option.key == 'opacity' ? '' : (/\d+[a-zA-Z%]+$/.test(from))? from.match(/\d+([a-zA-Z%]+)$/)[1] : 'px';
+                to = (typeof oval == "string") ? parseInt(oval, 10) : oval;
+                key = okey;
+                from = Element.getStyle(element, okey.replace("-webkit-", "").replace("-moz-", "")) || "0px";
+                unit = okey == 'opacity' ? '' : (unitRex.test(from))? from.match(unitRex)[1] : 'px';
                 from = parseFloat(from);
             }
             
             if(!to && to !== 0){
                 try {
-                    s[key] = option.value;
-                    //element.setStyle(s);
-                    element.style[key] = option.value;
+                    s[key] = oval;
+                    element.style[key] = oval;
                 }catch(e){  }
             }else{
-                properties[option.key] = { key: key, to: to, from: from, unit: unit };
+                properties[okey] = { key: key, to: to, from: from, unit: unit };
             }
-        });
-
+        }
+        
         /**
          * Calculate animation amount
          * @param {Object} ease
@@ -663,45 +696,40 @@ Element.addMethods({
             return (option.from + ease * (option.to - option.from));
         };
 
-        var begin = new Date().getTime();
-        var end = begin + options.duration;
-        options.onStart(element);
-
         var step = function(){
-            var time = new Date().getTime();
-            var style={};
+            var time = new Date().getTime(), okey, oval, rgb;
 
             if (time >= end) { // If duration is done. Complete the animation
                 clearInterval(element.timer);
                 element.timer = false;
+                
+                var valTo = (options.easing == "pulse" || options.easing == Protoplus.Transitions.pulse)? "from" : "to";
                 // This will end the animation with the correct values.
                 // if easing is pulse then set values to from.
-                // TODO: Find an optimized way of doing this
-
-                $H(properties).each(function(option){
-                    var valTo = (options.easing == "pulse" || options.easing == Protoplus.Transitions.pulse)? "from" : "to";
-                    if(["scrollX", "scrollLeft", "scrollY", "scrollTop"].include(option.key)){
-                        if (element.tagName == "BODY") { // In order to scroll the document
-                            if (option.value.key == "scrollLeft") {
-                                window.scrollTo(option.value[valTo], window.scrollY);
+                for(var okey in properties){
+                    oval=properties[okey];
+                    
+                    if(["scrollX", "scrollLeft", "scrollY", "scrollTop"].include(okey)){
+                        if (element.tagName.toUpperCase() == "BODY") { // In order to scroll the document
+                            if (oval.key == "scrollLeft") {
+                                window.scrollTo(oval[valTo], window.scrollY);
                             }else {
-                                window.scrollTo(window.scrollX, option.value[valTo]);
+                                window.scrollTo(window.scrollX, oval[valTo]);
                             }
                         }else {
-                            element[option.value.key] = option.value[valTo] + option.value.unit;
+                            element[oval.key] = oval[valTo] + oval.unit;
                         }
-                    }else if (["background", "color", "borderColor", "backgroundColor"].include(option.key)) {
-                        style[option.value.key] = 'rgb('+option.value[valTo].join(', ')+")";
-                        element.setStyle(style);
-                    }else if(option.key == "rotate"){
-                        style[option.key] = "rotate("+option.value[valTo] + option.value.unit+")";
-                        element.setStyle(style);
+                    }else if (["background", "color", "borderColor", "backgroundColor"].include(okey)) {
+                        element.style[oval.key] = 'rgb('+oval[valTo].join(', ')+")";
+                    }else if(okey == "opacity"){
+                        Element.setOpacity(element, oval[valTo]);
+                    }else if(okey == "rotate"){
+                        element.style[okey] = "rotate("+oval[valTo] + oval.unit+")";
                     }else{
-                        style[option.key] = option.value[valTo] + option.value.unit;
-                        element.setStyle(style);
+                        element.style[okey] = oval[valTo] + oval.unit;
                     }
-                });
-
+                }
+                
                 options.onEnd(element);
 
                 if(element.queue.length > 0){
@@ -711,37 +739,49 @@ Element.addMethods({
 
                 return element;
             }
+            
             options.onStep(element);
-            $H(properties).each(function(option){ // Do the animation for each element	
-                if(option.value.key == "scrollLeft" || option.value.key == "scrollTop"){
-                    if (element.tagName == "BODY") { // In order to scroll the document
-                        var scroll = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), option.value, false), 10) + option.value.unit;
-                        if(option.value.key == "scrollLeft"){
+
+            for(okey in properties){
+                oval=properties[okey];
+                
+                if(oval.key == "scrollLeft" || oval.key == "scrollTop"){
+                    if (element.tagName.toUpperCase() == "BODY") { // In order to scroll the document
+                        var scroll = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
+                        if(oval.key == "scrollLeft"){
                             window.scrollTo(scroll, window.scrollY);
                         }else{
                             window.scrollTo(window.scrollX, scroll);
                         }
                     }else{
-                        element[option.value.key] = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), option.value, false), 10) + option.value.unit;
+                        element[oval.key] = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
                     }
-                }else if (option.key == "background" || option.key == "color" || option.key == "borderColor" || option.key == "backgroundColor") {
+                }else if (okey == "background" || okey == "color" || okey == "borderColor" || okey == "backgroundColor") {
                     rgb = [];
                     for (var x = 0; x < 3; x++) {
-                        rgb[x] = fn(options.easing((time - begin) / options.duration, options.easingCustom), option.value, x); 
+                        rgb[x] = fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, x); 
                     }
-                    style[option.value.key] = 'rgb('+rgb.join(', ')+')';
-                    element.setStyle(style);
-                }else if(option.key == "rotate"){
-                        style[option.value.key] = "rotate("+fn(options.easing((time - begin) / options.duration, options.easingCustom), option.value, false) + option.value.unit+")";
-                        element.setStyle(style);
+                    element.style[oval.key] = 'rgb('+rgb.join(', ')+')';
+                }else if(okey == "opacity"){
+                    Element.setOpacity(element, fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false));
+                }else if(okey == "rotate"){
+                    element.style[oval.key] = "rotate("+fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit+")";
                 } else {
-                    style[option.key] = fn(options.easing((time - begin) / options.duration, options.easingCustom), option.value, false) + option.value.unit;
-                    element.setStyle(style);
+                    element.style[okey] = fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit;
                 }
-            });
+            }
         };
         
-        element.timer = setInterval(step, 10);
+        if(options.delay){
+            element.delayTime = setTimeout(function(){
+                init();
+                element.timer = setInterval(step, 10);
+            }, options.delay);
+        }else{
+            init();
+            element.timer = setInterval(step, 10);
+        }
+        
         return element;
     },
     /**
@@ -787,7 +827,59 @@ Element.addMethods({
         element = $(element);
         element.disabled = false;
         return element;
-    }
+    },    
+    /**
+     * Solution for circular reference problem. Hopefully it will solve memorry leaks
+     * Sets an element with the with the given name as a reference
+     * @param {Object} element
+     * @param {Object} name
+     * @param {Object} reference
+     */
+    setReference: function(element, name, reference){
+        if(!element.REFID){ element.REFID = Protoplus.REFIDCOUNT++; }
+        
+        if(!Protoplus.references[element.REFID]){
+            Protoplus.references[element.REFID] = {};
+        }
+        Protoplus.references[element.REFID][name] = $(reference);
+        return element;
+    },
+    /**
+     * Returns the given name
+     * @param {Object} element
+     * @param {Object} name
+     */
+    getReference: function(element, name){
+        if(!element.REFID){
+            return false;
+        }
+        return Protoplus.references[element.REFID][name];
+    },
+    /**
+     * Safe remove function, Also removes the references 
+     * @param {Object} element
+     */
+    remove: function(element){
+        if(element.REFID){ // Clean unnecessary garbage
+            delete Protoplus.references[element.REFID];
+        }
+        if(element.parentNode){            
+            element.parentNode.removeChild(element);
+        }
+        return element;
+    },
+};
+
+/**
+ * @extends DOM
+ */
+Element.addMethods(Protoplus.utils);
+
+/**
+ * Memmory leak prevention
+ */
+Event.observe(window, 'unload', function(){
+    delete Protoplus
 });
 
 /**
@@ -809,6 +901,7 @@ Ajax = Object.extend(Ajax, {
             method: 'post',
             timeout: 60, // seconds
             parameters:'',
+            force:false,
             onComplete: Prototype.K,
             onSuccess: Prototype.K,
             onFail: Prototype.K
@@ -841,7 +934,7 @@ Ajax = Object.extend(Ajax, {
 		var matches = /^(\w+:)?\/\/([^\/?#]+)/.exec(url);	
 		var sameDomain = (matches && ( matches[1] && matches[1] != location.protocol || matches[2] != location.host ));
         
-        if(!sameDomain){ // If url is not external then convert it to Ajax.Request
+        if(!sameDomain && this.options.force === false){ // If url is not external then convert it to Ajax.Request
             return new Ajax.Request(url, this.options);
         }
         
@@ -938,6 +1031,10 @@ window.alert = function(){
     }
     _alert(first);
 };
+
+var rand = function (min, max){
+    return Math.floor(Math.random()*(max-min))+min;
+}
 /**
  * UI Elements
  * document.createNewWindow => Creates a new floating window
@@ -958,7 +1055,7 @@ if(window.Protoplus === undefined){
     throw("Error: ProtoPlus is required by ProtoPlus-UI.js");
 }
 
-Object.extend(document, { 
+Object.extend(document, {
     /**
      * Stops and destroys all tooltips
      */
@@ -995,6 +1092,13 @@ Object.extend(document, {
      * @param {Object} options
      */
     window: function(options){
+		/**
+		 * An array of window objects. The top one in the stack is the window that 
+		 * should be closed first.
+		 */
+		if (!this.windowArr) {
+			this.windowArr = [];
+		}
         /**
            
             closeEffect:true, // Enable/Disable the effect on closing
@@ -1050,7 +1154,7 @@ Object.extend(document, {
         options.borderWidth = parseInt(options.borderWidth, 10);
 
         var titleStyle   =    { background: options.titleBackground, zIndex:1000, position:'relative', padding: '2px', borderBottom: '1px solid #ccc' };
-        var dimmerStyle  =    { background:options.dimColor, height:'100%', width:'100%', position:'absolute', top:'0px', left:'0px', opacity:options.dimOpacity, zIndex:options.dimZindex };
+        var dimmerStyle  =    { background:options.dimColor, height:'100%', width:'100%', position:'fixed', top:'0px', left:'0px', opacity:options.dimOpacity, zIndex:options.dimZindex };
         var windowStyle  =    { top:options.top,left: options.left,position: 'absolute', padding: options.borderWidth+'px',height: "auto", width: options.width + 'px', zIndex: options.winZindex };
         var buttonsStyle =    { padding: '5px', borderTop: '1px solid #ccc', background:options.buttonsBackground, zIndex:1000, position:'relative', textAlign:options.buttonsAlign };
         var contentStyle =    { background: options.background, zIndex: 1000, height: options.height !== false? options.height+'px' : "auto", position: 'relative', padding: options.contentPadding + 'px' };
@@ -1063,7 +1167,7 @@ Object.extend(document, {
             var dimmer = new Element('div');
             dimmer.onmousedown = function(){return false;}; // Disable browser's default drag and paste functionality
             dimmer.setStyle(dimmerStyle);
-            $(document.body).setStyle({overflow:'hidden'});
+            //$(document.body).setStyle({overflow:'hidden'});
         }
 
         // Create window structure
@@ -1094,21 +1198,49 @@ Object.extend(document, {
             
             $A(options.buttons).each(function(button){
                 
-                var but = new Element('input', {className:'window-buttons', type:'button', name:button.name, value:button.title}).observe('click', function(){
+                var but = new Element('button', {className:'window-buttons', type:'button', name:button.name}).observe('click', function(){
                     button.handler(win, but);
                 });
+                var butTitle = new Element('span').insert(button.title);
+                if(button.icon){
+                    button.iconAlign = button.iconAlign || 'left';
+                    var butIcon = new Element('img', { src: button.icon, align: button.iconAlign == 'right'? 'absmiddle' : 'left' }).setStyle( 'margin-' + ( button.iconAlign == 'left'? 'right' : 'left' ) + ': 3px;');
+                    
+                    if(button.iconAlign == 'left'){
+                        but.insert(butIcon);
+                    }
+                    
+                    but.insert(butTitle);
+                    
+                    if(button.iconAlign == 'right'){
+                        but.insert(butIcon);
+                    }
+                    
+                }else{
+                    but.insert(butTitle);
+                }
+                
+                if(button.align == 'left'){
+                    but.setStyle('float:left');
+                }
+                
+                but.changeTitle = function(title){
+                    butTitle.update(title);
+                    return but;
+                }
                 
                 win.buttons[button.name] = but;
                 
-                if(button.disabled){ but.disable(); }
+                if(button.hidden === true){ but.hide(); }
+                if(button.disabled === true){ but.disable(); }
                 
                 if(button.style){
                     but.setStyle(button.style);
                 }
                 
-                buttons.insert('&nbsp;');
+                //buttons.insert('&nbsp;');
                 buttons.insert(but);
-                buttons.insert('&nbsp;');
+                //buttons.insert('&nbsp;');
             });
         }
 
@@ -1134,6 +1266,9 @@ Object.extend(document, {
         title_close.setStyle(titleCloseStyle);
 
         var closebox = function(){ // Close function
+        	if (win != document.windowArr[document.windowArr.length - 1]) {
+				return;
+			}
             if(options.onClose(win) !== false){
                 var close = function(){
                     if(dimmer){ dimmer.remove(); document.dimmed = false; }
@@ -1147,6 +1282,7 @@ Object.extend(document, {
                 }
                 Event.stopObserving(window, 'resize', win.reCenter);
                 document.stopObserving('keyup', escClose);
+				document.windowArr.pop();
             }
         };
         var escClose = function(e){ if(e.keyCode == 27){ closebox(); } };
@@ -1175,7 +1311,11 @@ Object.extend(document, {
         var top = ((vp.height - bvp.height) / 2) + vso.top;
         var left = ((vp.width - bvp.width) / 2) + vso.left;
         
-        options.onInsert(win);
+        try{
+            options.onInsert(win);
+        }catch(e){
+            console.error(e);
+        }
         
         if(dimmer){
             dimmer.setStyle({height:vp.height+'px', width:vp.width+'px', top:vso.top+'px', left:vso.left+'px'  });
@@ -1218,13 +1358,14 @@ Object.extend(document, {
         // Make it draggable
         win.setDraggable({handler:title_text, constrainViewport:true, dynamic:options.dynamic, dragEffect:false});
         win.close = closebox;
+		// Add the new window to the windows array.
+		document.windowArr.push(win);
         return win;
     }
 });
-
 document.createNewWindow = document.window;
 
-Element.addMethods({
+Protoplus.ui = {
     /**
      * Convers element to a editable area.
      * @param {Object} elem
@@ -2402,8 +2543,10 @@ Element.addMethods({
             });
 
             var OK = new Element('input', {type:'button', value:'Ok'}).observe('click', function(){
-                element.value = box.value;
-                element.focus();
+                if(element.tagName == "INPUT"){
+                    element.value = box.value;
+                    element.focus();
+                }
                 table.remove();
                 setTimeout(function(){
                     element.colorPickerEnabled = false;
@@ -2530,7 +2673,11 @@ Element.addMethods({
      * @param {Object} value
      */
     hint: function(element, value, options){
-
+        
+        if(element.removeHint){
+            return element.hintClear();
+        }
+        
         options = Object.extend({
             hintColor:'#999'
         }, options || {});
@@ -2542,34 +2689,58 @@ Element.addMethods({
             element.value = value;
             element.hinted = true;
         }
-        
-        element.observe('focus', function(){
+        var focus = function(){
             if(element.value == value){
                 element.value = "";
                 element.setStyle({color:color}).hinted = false;
             }
-        });
+        }
         
-        element.observe('blur', function(){
+        var blur = function(){
             if(element.value === ""){
                 element.value = value;
                 element.setStyle({ color:options.hintColor }).hinted = true;
             }
-        });
+        }
+        
+        var submit = function(){
+            if(element.value == value){
+                element.value = "";
+                element.hinted = false;
+            }
+        }
+        
+        element.observe('focus', focus);
+        element.observe('blur', blur);
         
         if(element.form){
-            $(element.form).observe('submit', function(){
-                if(element.value == value){
-                    element.value = "";
-                    element.hinted = false;
-                }
-            });
+            $(element.form).observe('submit', submit);
         }
         
         element.hintClear = function(){
             element.value = value;
             element.setStyle({ color:options.hintColor }).hinted = true;
+            return element;
         };
+        
+        element.removeHint = function(){
+            element.setStyle({color:color});
+            
+            if(element.value == value){
+                element.value = "";
+            }
+            element.hintClear = undefined;
+            element.hinted = undefined;
+            element.removeHint = undefined;
+            
+            element.stopObserving('focus', focus);
+            element.stopObserving('blur', blur);
+            
+            if(element.form){
+                $(element.form).stopObserving('submit', submit);
+            }
+            return element;
+        }
         
         return element;
     },
@@ -2966,6 +3137,6 @@ Element.addMethods({
 		};
 		return element;
 	}
-});
-
+};
+Element.addMethods(Protoplus.ui);
 // The End... Thank you for listening

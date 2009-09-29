@@ -53,7 +53,7 @@
             })
             document.ready(function(){
                 $("drag", "drag1").each(function(el){ 
-                    $(el).draggable({
+                    $(el).setDraggable({
 						revert: true,
                         onEnd:function(drag, h, e){
                             drag.setStyle({display:"none"});
@@ -61,10 +61,12 @@
                             drag.setStyle({display:"block"});
                             if(receiver.droppable){
                                 if(!receiver.acceptClass){
-                                    receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic'});
+                                    receiver.shift({background:'#FFFFEA', easing:'pulse', link:'queue'});
+                                    receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic', link:'queue'});
                                 }else{
                                     if(receiver.acceptClass.strip() == drag.className.strip()){
-                                        receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic'});
+                                        receiver.shift({background:'#FFFFEA', easing:'pulse', link:'queue'});
+                                        receiver.shift({height:(parseInt(receiver.getStyle("height"), 10)+50), duration:1, easing:'elastic', link:'queue'});
                                     }
                                 }
                             }
