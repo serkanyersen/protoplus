@@ -576,6 +576,7 @@ Protoplus.utils = {
             link:'cancel',
             remove: false,
             easingCustom:false,
+            propertyEasings:{},
             easing: Protoplus.Transitions.sineOut
         }, options || {});
 
@@ -605,6 +606,9 @@ Protoplus.utils = {
             }else{
                 options.easing = Protoplus.Transitions.sineOut;
             }
+        } else if(typeof options.easing == 'object'){
+            options.propertyEasings = options.easing; 
+            options.easing = Protoplus.Transitions.sineOut;
         }else if(typeof options.easing != 'function'){
             options.easing = Protoplus.Transitions.sineOut;
         }
@@ -625,7 +629,7 @@ Protoplus.utils = {
         
         
         for(var x in options){
-            if (!["duration", "onStart", "onStep", "onEnd", "remove", "easing", "link", "delay", "easingCustom"].include(x) && options[x] !== false) {
+            if (!["duration", "onStart", "onStep", "onEnd", "remove", "easing", "link", "delay", "easingCustom", "propertyEasings"].include(x) && options[x] !== false) {
                 properties[x] = options[x];
             }            
         }
@@ -635,7 +639,7 @@ Protoplus.utils = {
         // Prepare and define values for animation.
         for(var i in properties){
             var okey = i, oval=properties[i];
-            var to, from, key, unit, s = [];
+            var to, from, key, unit, s = [], easing=options.easing;
             
             if (["scrollX", "scrollLeft", "scrollY", "scrollTop"].include(okey)) {
                 to = parseFloat(oval);
@@ -671,13 +675,17 @@ Protoplus.utils = {
                 from = parseFloat(from);
             }
             
+            if(okey in options.propertyEasings){
+                easing = Protoplus.Transitions[options.propertyEasings[okey]];
+            }
+            
             if(!to && to !== 0){
                 try {
                     s[key] = oval;
                     element.style[key] = oval;
                 }catch(e){  }
             }else{
-                properties[okey] = { key: key, to: to, from: from, unit: unit };
+                properties[okey] = { key: key, to: to, from: from, unit: unit, easing: easing };
             }
         }
         
@@ -747,27 +755,27 @@ Protoplus.utils = {
                 
                 if(oval.key == "scrollLeft" || oval.key == "scrollTop"){
                     if (element.tagName.toUpperCase() == "BODY") { // In order to scroll the document
-                        var scroll = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
+                        var scroll = parseInt(fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
                         if(oval.key == "scrollLeft"){
                             window.scrollTo(scroll, window.scrollY);
                         }else{
                             window.scrollTo(window.scrollX, scroll);
                         }
                     }else{
-                        element[oval.key] = parseInt(fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
+                        element[oval.key] = parseInt(fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, false), 10) + oval.unit;
                     }
                 }else if (okey == "background" || okey == "color" || okey == "borderColor" || okey == "backgroundColor") {
                     rgb = [];
                     for (var x = 0; x < 3; x++) {
-                        rgb[x] = fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, x); 
+                        rgb[x] = fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, x); 
                     }
                     element.style[oval.key] = 'rgb('+rgb.join(', ')+')';
                 }else if(okey == "opacity"){
-                    Element.setOpacity(element, fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false));
+                    Element.setOpacity(element, fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, false));
                 }else if(okey == "rotate"){
-                    element.style[oval.key] = "rotate("+fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit+")";
+                    element.style[oval.key] = "rotate("+fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit+")";
                 } else {
-                    element.style[okey] = fn(options.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit;
+                    element.style[okey] = fn(oval.easing((time - begin) / options.duration, options.easingCustom), oval, false) + oval.unit;
                 }
             }
         };
@@ -1035,6 +1043,7 @@ window.alert = function(){
 var rand = function (min, max){
     return Math.floor(Math.random()*(max-min))+min;
 }
+
 /**
  * UI Elements
  * document.createNewWindow => Creates a new floating window

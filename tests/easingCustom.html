@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <script type="text/javascript" src="../prototype.js"></script>
+        <script type="text/javascript" src="../protoplus.js"></script>
+		<title>Easing Customs</title>
+        <style>
+            body{
+                font-size:12px;
+                font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+            }
+        </style>
+        <script type="text/javascript">
+            function runTest(){
+                $('box1').setStyle('top:8px;left:8px;')
+                
+                $('box1').shift({
+                    top: document.viewport.getHeight() - 52,
+                    left: (document.viewport.getWidth() - 48) / 2,
+                    
+                    duration: $('duration').getSelected().value,
+                    easing: {
+                        top: $('easeTop').getSelected().value,
+                        left: $('easeLeft').getSelected().value
+                    }
+                });                   
+            }
+            
+            document.ready(function(){
+                
+                $H(Protoplus.Transitions).each(function(e){
+                    $('easeTop').insert(new Element("option", {value:e.key}).insert(e.key));
+                    $('easeLeft').insert(new Element("option", {value:e.key}).insert(e.key));
+                });
+                
+                $('easeTop').selectOption('bounce');
+                $('easeLeft').selectOption('sineOut');
+                $('duration').selectOption('1');
+            })
+        
+        </script>
+        <style>
+            #test{
+                height:0px;
+                width:0px;
+            }
+        </style>
+	</head>
+	<body>
+	    <div id="box1" style="position:absolute;top:8px;left:8px;border:1px solid #999; background:#ddd; height:50px; width:50px;">
+            &nbsp;
+	    </div>
+        <br><br><br><br>
+        Top Easing: <select id="easeTop"></select><br>
+        Left Easing: <select id="easeLeft"></select><br> 
+        Duration: 
+        <select id="duration">
+            <option>0.2</option>
+            <option>0.5</option>
+            <option>0.8</option>
+            <option>1</option>
+            <option>1.2</option>
+            <option>1.5</option>
+            <option>2</option>
+            <option>2.5</option>
+            <option>3</option>
+            <option>5</option>
+        </select>
+        <br><br>
+        <button onclick="runTest();">Run</button>
+        <div id="test"></div>
+	</body>
+</html>
