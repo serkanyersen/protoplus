@@ -35,6 +35,9 @@ Protoplus = {
         sineIn:     function(x){ return 1 - Math.cos(x * Math.PI / 2); },
         sineOut:    function(x){ return Math.sin(x * Math.PI / 2); },
         sineInOut:  function(x){ return 0.5 - Math.cos(x * Math.PI) / 2; },
+        backIn:     function(b){ var a = 1.70158;return (b) * b * ((a + 1) * b - a);},
+        backOut:    function(b){ var a = 1.70158;return (b = b - 1) * b * ((a + 1) * b + a) + 1;},
+        backInOut:  function(b){ var a = 1.70158;if ((b /= 0.5) < 1) {return 0.5 * (b * b * (((a *= (1.525)) + 1) * b - a));}return 0.5 * ((b -= 2) * b * (((a *= (1.525)) + 1) * b + a) + 2);},
         cubicIn:    function(x){ return Math.pow(x, 3); },
         cubicOut:   function(x){ return 1 + Math.pow(x - 1, 3); },
         cubicInOut: function(x){ return x < 0.5 ? 4 * Math.pow(x, 3) : 1 + 4 * Math.pow(x - 1, 3); },
@@ -53,10 +56,17 @@ Protoplus = {
         expoIn:     function(x){ return Math.pow(2, 10 * (x - 1)); },
         expoOut:    function(x){ return 1 - Math.pow(2, -10 * x); },
         expoInOut:  function(x){ x = 2 * x - 1; return x < 0 ? Math.pow(2, 10 * x) / 2 : 1 - Math.pow(2, -10 * x) / 2; },
+        swingFrom:  function(b){ var a = 1.70158;return b * b * ((a + 1) * b - a);},
+        swingTo:    function(b){ var a = 1.70158;return (b -= 1) * b * ((a + 1) * b + a) + 1;},
+        swingFromTo:function(b){ var a = 1.70158;return ((b /= 0.5) < 1) ? 0.5 * (b * b * (((a *= (1.525)) + 1) * b - a)) : 0.5 * ((b -= 2) * b * (((a *= (1.525)) + 1) * b + a) + 2);},
+        easeFrom:   function(a){ return Math.pow(a, 4)},
+        easeTo:     function(a){ return Math.pow(a, 0.25)},
+        easeFromTo: function(a){ if ((a /= 0.5) < 1) {return 0.5 * Math.pow(a, 4)}return -0.5 * ((a -= 2) * Math.pow(a, 3) - 2)},
         pulse:      function(x, n){ if (!n) { n = 1; } return 0.5 - Math.cos(x * n * 2 * Math.PI) / 2; },
         wobble:     function(x, n){ if (!n) { n = 3; } return 0.5 - Math.cos((2 * n - 1) * x * x * Math.PI) / 2; },
         elastic:    function(x, e){ var a; if (!e) { a = 30; } else { e = Math.round(Math.max(1, Math.min(10, e))); a = (11 - e) * 5; } return 1 - Math.cos(x * 8 * Math.PI) / (a * x + 1) * (1 - x); },
-        bounce:     function(x, n){ n = n ? Math.round(n) : 4; var c = 3 - Math.pow(2, 2 - n); var m = -1, d = 0, i = 0; while (m / c < x) { d = Math.pow(2, 1 - i++); m += d; } if (m - d > 0) { x -= ((m - d) + d / 2) / c; } return c * c * Math.pow(x, 2) + (1 - Math.pow(0.25, i - 1)); }
+        bounce:     function(x, n){ n = n ? Math.round(n) : 4; var c = 3 - Math.pow(2, 2 - n); var m = -1, d = 0, i = 0; while (m / c < x) { d = Math.pow(2, 1 - i++); m += d; } if (m - d > 0) { x -= ((m - d) + d / 2) / c; } return c * c * Math.pow(x, 2) + (1 - Math.pow(0.25, i - 1)); },
+        bouncePast: function(a){ if (a < (1 / 2.75)) {return (7.5625 * a * a);}else {if (a < (2 / 2.75)) {return 2 - (7.5625 * (a -= (1.5 / 2.75)) * a + 0.75);}else {if (a < (2.5 / 2.75)) {return 2 - (7.5625 * (a -= (2.25 / 2.75)) * a + 0.9375);}else {return 2 - (7.5625 * (a -= (2.625 / 2.75)) * a + 0.984375);}}}}
     },
     Colors: {
         /**
@@ -875,7 +885,7 @@ Protoplus.utils = {
             element.parentNode.removeChild(element);
         }
         return element;
-    },
+    }
 };
 
 /**

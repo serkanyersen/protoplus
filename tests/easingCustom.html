@@ -13,30 +13,51 @@
         </style>
         <script type="text/javascript">
             function runTest(){
-                $('box1').setStyle('top:8px;left:8px;')
-                
+                $('box1').setStyle('top:8px;left:8px;').setStyle({'-webkit-transform':'rotate(0deg)'})
+                var back = "rgb("+[rand(0, 200), rand(0, 200), rand(0, 200)].join(', ')+")";
+                var etop = $('easeTop').getSelected().text;
+                var eleft = $('easeLeft').getSelected().text;
                 $('box1').shift({
                     top: document.viewport.getHeight() - 52,
                     left: (document.viewport.getWidth() - 48) / 2,
+                    rotate: $('rotate').checked? '360.05' : false,
                     
                     duration: $('duration').getSelected().value,
                     easing: {
-                        top: $('easeTop').getSelected().value,
-                        left: $('easeLeft').getSelected().value
+                        top: etop,
+                        left: eleft
+                    },
+                    onStep:function(){
+                        if(!$('dpaths').checked){return;}
+                        var div = document.createElement('div');
+                        b = $('box1').style;
+                        div.title="Top: "+etop+", Left: "+eleft;
+                        div.style.cssText = "height:0px;width:0px;border:1px solid "+back+";position:absolute;top:"+b.top+";left:"+b.left;
+                        div.className="dots";
+                        document.body.appendChild(div);
                     }
                 });                   
             }
             
             document.ready(function(){
                 
-                $H(Protoplus.Transitions).each(function(e){
-                    $('easeTop').insert(new Element("option", {value:e.key}).insert(e.key));
-                    $('easeLeft').insert(new Element("option", {value:e.key}).insert(e.key));
+                $H(Protoplus.Transitions).each(function(e, i){
+                    $('easeTop').insert(new Element("option", {value:i}).insert(e.key));
+                    $('easeLeft').insert(new Element("option", {value:i}).insert(e.key));
                 });
                 
                 $('easeTop').selectOption('bounce');
                 $('easeLeft').selectOption('sineOut');
-                $('duration').selectOption('1');
+                $('duration').selectOption('1.5');
+                $('rand').on('click', function(){
+                    $('easeTop').selectOption(rand(0, 37)+"");
+                    $('easeLeft').selectOption(rand(0, 37)+"");
+                    runTest();
+                });
+                $('cpath').on('click', function(){
+                    $('box1').setStyle('top:8px;left:8px;').setStyle({'-webkit-transform':'rotate(0deg)'})
+                    $$('.dots').invoke('remove');
+                });
             })
         
         </script>
@@ -66,8 +87,12 @@
             <option>2.5</option>
             <option>3</option>
             <option>5</option>
-        </select>
-        <br><br>
+        </select><br>
+        Draw Paths: <input type="checkbox" id="dpaths"><br>
+        Rotate (webkit only): <input type="checkbox" id="rotate"><br>
+        <br>
+        <button id="cpath">Clear Paths</button>&nbsp;&nbsp;
+        <button id="rand">Random</button>&nbsp;&nbsp;
         <button onclick="runTest();">Run</button>
         <div id="test"></div>
 	</body>
