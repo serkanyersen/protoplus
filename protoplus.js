@@ -173,11 +173,9 @@ Protoplus = {
             }
             msg = title+' took '+res;
             
-            if('console' in window/* && !console.fake*/){
+            if('console' in window){
                 console.info(msg);
             }else{
-                console.log("ss");
-                Debug.echo(msg);
             }
         }
     }
@@ -208,6 +206,36 @@ Object.extend(Hash.prototype, {
         }
     }
 });
+
+Object.extend(Object, {
+    deepClone: function(obj){
+        if (typeof obj !== 'object' || obj == null) {
+            return obj;
+        }
+        var clone = Object.isArray(obj)? [] : {};
+        for (var i in obj) {
+            var node = obj[i];
+            if (typeof node == 'object') {
+                if (Object.isArray(node)) {
+                    clone[i] = [];
+                    for (var j = 0; j < node.length; j++) {
+                        if (typeof node[j] != 'object') {
+                            clone[i].push(node[j]);
+                        } else {
+                            clone[i].push(this.deepClone(node[j]));
+                        }
+                    }
+                } else {
+                    clone[i] = this.deepClone(node);
+                }
+            } else {
+                clone[i] = node;
+            }
+        }
+        return clone;
+    }
+});
+
 
 /**
  * Extend the string
@@ -255,6 +283,12 @@ Object.extend(String.prototype, {
             }            
         });
         return word;
+    },
+    sanitize: function(){
+        var str = this;
+        str = str.replace(/\'/gim, "\\'");
+        str = str.replace(/\n/gim, " ");
+        return str;
     }
 });
 
@@ -377,6 +411,36 @@ Object.extend(Event, {
 
 Protoplus.utils = {
     /**
+     * Checks if the element has a fixed container or not
+     * @param {Object} element
+     */
+    hasFixedContainer: function(element){
+        var result = false;
+        element.ancestors().each(function(el){
+            if(result){ return; }
+            if(el.style.position == "fixed"){
+                result = true;
+            }
+        });
+        return result;
+    },
+    
+    getCurrentStyle: function(element, name){
+    	if (element.style[name]) {
+            return element.style[name];
+        } else if (element.currentStyle) {
+            return element.currentStyle[name];
+        }
+        else if (document.defaultView && document.defaultView.getComputedStyle) {
+            name = name.replace(/([A-Z])/g, "-$1");
+            name = name.toLowerCase();
+            s = document.defaultView.getComputedStyle(element, "");
+            return s && s.getPropertyValue(name);
+        } else {
+            return null;
+        }
+    },
+    /**
      * Determines if the passed element is overflowing its bounds,
      * either vertically or horizontally.
      * Will temporarily modify the "overflow" style to detect this
@@ -449,7 +513,7 @@ Protoplus.utils = {
     },
     
     /**
-     * Mimics the hover effect on browsers.
+     * Mimics the mouseenter, mouseleave effect on browsers.
      * @param {Object} elem
      * @param {Object} over
      * @param {Object} out
@@ -477,6 +541,26 @@ Protoplus.utils = {
         });
         return elem;
     },
+    
+    mouseEnter: function(elem, over, out){
+        $(elem).observe("mouseenter", function(evt){
+            if(typeof over == "function"){
+                over(elem, evt);
+            }else if(typeof over == "string"){
+                $(elem).addClassName(over);
+            }
+        });
+        $(elem).observe("mouseleave", function(evt){
+            if (typeof out == "function") {
+                
+                out(elem, evt);
+            }else if(typeof over == "string"){
+                $(elem).removeClassName(over);
+            }
+        });
+        return elem;
+    },
+    
     /**
      * Short hand for observe
      * @param {Object} element
@@ -628,22 +712,25 @@ Protoplus.utils = {
         element.timer = false;
         
         var properties = {}, begin, end, 
-        /**
+        
+        /*
          * initiates the duration and call on start event
          */
         init = function(){
             begin = new Date().getTime();
             end = begin + options.duration;
-            options.onStart(element);
+            options.onStart && options.onStart(element);
         }
         
-        
+        /*
+         * Remove the default options 
+         */
         for(var x in options){
             if (!["duration", "onStart", "onStep", "onEnd", "remove", "easing", "link", "delay", "easingCustom", "propertyEasings"].include(x) && options[x] !== false) {
                 properties[x] = options[x];
             }            
         }
-        
+        // Get the unit value
         var unitRex=/\d+([a-zA-Z%]+)$/;
         
         // Prepare and define values for animation.
@@ -655,9 +742,9 @@ Protoplus.utils = {
                 to = parseFloat(oval);
                 key = (okey == "scrollX")? "scrollLeft" : (okey == "scrollY")? "scrollTop" : okey;
                 if(element.tagName == "BODY"){
-                    from = (okey in ["scrollX", "scrollLeft"])? window.scrollX : window.scrollY; // Read the window scroll
+                    from = (okey == "scrollX" || okey == "scrollLeft")? window.scrollX : window.scrollY; // Read the window scroll
                 }else{
-                    from = (okey in ["scrollX", "scrollLeft"])? Element.getScroll(element).x : Element.getScroll(element).y;
+                    from = (okey == "scrollX" || okey == "scrollLeft")? element.scrollLeft : element.scrollTop
                 }
                 unit = '';
             } else if (okey == "rotate"){
@@ -685,6 +772,7 @@ Protoplus.utils = {
                 from = parseFloat(from);
             }
             
+            // If there is a different easing for this item
             if(okey in options.propertyEasings){
                 easing = Protoplus.Transitions[options.propertyEasings[okey]];
             }
@@ -748,8 +836,10 @@ Protoplus.utils = {
                     }
                 }
                 
-                options.onEnd(element);
-
+                options.onEnd && options.onEnd(element);
+                if(options.remove){
+                    element.remove();
+                }
                 if(element.queue.length > 0){
                     var que = element.queue.splice(0, 1);
                     element.shift(que[0]);
@@ -758,7 +848,7 @@ Protoplus.utils = {
                 return element;
             }
             
-            options.onStep(element);
+            options.onStep && options.onStep(element);
 
             for(okey in properties){
                 oval=properties[okey];
@@ -1090,6 +1180,41 @@ Object.extend(document, {
         document.stopTooltip = false;
     },
     /**
+     * Over All defaults for all windows
+     */
+    windowDefaults: { // Default options
+        height:false,    // Height of the window
+        width:400,    // Width of the window
+        title:'&nbsp;',    // Title of the window
+        titleBackground:'#999',
+        buttonsBackground: '#F5F5F5',
+        background:'#FFFFFF',
+        top:'25%',        // Top location
+        left:'25%',       // Left location
+        winZindex: 10001,
+        borderWidth:10,   // Width of the surrounding transparent border
+        borderColor:'#000', // Color of the surrounding transparent border
+        borderOpacity:0.6, // Opacity of the surrounding transparent border
+        borderRadius: "10px", // Corner radius of the surrounding transparent border
+        titleClass:false, // CSS class of the title box
+        contentClass:false, // CSS class of the content box
+        buttonsClass:false, // CSS class of the buttons box
+        closeButton:'X', // Close button content, can be replaced with an image
+        openEffect:true, // Enable/Disable the effect on opening
+        closeEffect:true, // Enable/Disable the effect on closing
+        dim:true,  // Make it modal window, disable background
+        modal:true, // Same as dim
+        dimColor:'#fff', // color of the dimming surface
+        dimOpacity:0.8, // opacity of the dimming surface
+        dimZindex: 10000,
+        dynamic: true, // Update the window dynamically while dragging
+        buttons: false, // Not completed yet.
+        contentPadding: '8',
+        closeTo:false,
+        buttons:false, // [ { text:'', handler:function(){} } ]
+        buttonsAlign: 'right'
+    },
+    /**
      * Creates a floating window
      * <li>onClose:Prototype.K,    // Event will run when the window is closed</li>
     <li>height:false,    // Height of the window </li>
@@ -1118,67 +1243,27 @@ Object.extend(document, {
 		if (!this.windowArr) {
 			this.windowArr = [];
 		}
-        /**
-           
-            closeEffect:true, // Enable/Disable the effect on closing
-            dim:true,  // Make it modal window, disable background
-            modal:true, // Same as dim
-            dimColor:'#fff', // color of the dimming surface
-            dimOpacity:0.6, // opacity of the dimming surface
-            dynamic: true, // Update the window dynamically while dragging
-            buttons: false, // 
-            closeTo:false,
-            buttons:false, // [ { text:'', handler:function(){} } ]
-            buttonsAlign: 'right'
-         */
-        options = Object.extend({ // Default options
+       
+        options = Object.extend( Object.deepClone(document.windowDefaults), options || {});
+        
+        options = Object.extend({
             onClose:Prototype.K,    // Event will run when the window is closed
             onInsert:Prototype.K,   // When the window inserted to document but not yet displayed
-            onDisplay:Prototype.K,  // When the window displayed on the screen
-            height:false,    // Height of the window
-            width:400,    // Width of the window
-            title:'&nbsp;',    // Title of the window
-            titleBackground:'#F5F5F5',
-            buttonsBackground: '#F5F5F5',
-            background:'#FFFFFF',
-            top:'25%',        // Top location
-            left:'25%',       // Left location
-            winZindex: 10001,
-            borderWidth:10,   // Width of the surrounding transparent border
-            borderColor:'#000', // Color of the surrounding transparent border
-            borderOpacity:0.3, // Opacity of the surrounding transparent border
-            borderRadius: "5px", // Corner radius of the surrounding transparent border
-            titleClass:false, // CSS class of the title box
-            contentClass:false, // CSS class of the content box
-            buttonsClass:false, // CSS class of the buttons box
-            closeButton:'X', // Close button content, can be replaced with an image
-            openEffect:true, // Enable/Disable the effect on opening
-            closeEffect:true, // Enable/Disable the effect on closing
-            dim:true,  // Make it modal window, disable background
-            modal:true, // Same as dim
-            dimColor:'#fff', // color of the dimming surface
-            dimOpacity:0.8, // opacity of the dimming surface
-            dimZindex: 10000,
-            dynamic: true, // Update the window dynamically while dragging
-            buttons: false, // Not completed yet.
-            contentPadding: '8',
-            closeTo:false,
-            buttons:false, // [ { text:'', handler:function(){} } ]
-            buttonsAlign: 'right'
-        }, options || {});
+            onDisplay:Prototype.K  // When the window displayed on the screen
+        }, options, {});
         
         options.dim = (options.modal !== true)? false : options.dim;
         options.width = parseInt(options.width, 10);
         options.height = (options.height)? parseInt(options.height, 10) : false;
         options.borderWidth = parseInt(options.borderWidth, 10);
 
-        var titleStyle   =    { background: options.titleBackground, zIndex:1000, position:'relative', padding: '2px', borderBottom: '1px solid #ccc' };
+        var titleStyle   =    { background: options.titleBackground, zIndex:1000, position:'relative', padding: '2px', borderBottom: '1px solid #ccc', height:'35px', MozBorderRadius: '8px 8px 0px 0px' };
         var dimmerStyle  =    { background:options.dimColor, height:'100%', width:'100%', position:'fixed', top:'0px', left:'0px', opacity:options.dimOpacity, zIndex:options.dimZindex };
         var windowStyle  =    { top:options.top,left: options.left,position: 'absolute', padding: options.borderWidth+'px',height: "auto", width: options.width + 'px', zIndex: options.winZindex };
-        var buttonsStyle =    { padding: '5px', borderTop: '1px solid #ccc', background:options.buttonsBackground, zIndex:1000, position:'relative', textAlign:options.buttonsAlign };
+        var buttonsStyle =    { padding: '5px', borderTop: '1px solid #ccc', background:options.buttonsBackground, zIndex:1000, position:'relative', textAlign:options.buttonsAlign, MozBorderRadius:'0 0 8px 8px' };
         var contentStyle =    { background: options.background, zIndex: 1000, height: options.height !== false? options.height+'px' : "auto", position: 'relative', padding: options.contentPadding + 'px' };
-        var wrapperStyle =    { zIndex:600, border:'1px solid #ddd' };
-        var titleTextStyle  = { fontWeight:'bold', color:'#777' };
+        var wrapperStyle =    { zIndex:600, border:'1px solid #ddd', MozBorderRadius:'8px' };
+        var titleTextStyle  = { fontWeight:'bold', color:'#777', color:'#fff', textShadow:'0px -1px 0 #000', paddingLeft:'10px' };
         var backgroundStyle = { height: '100%',width: '100%',background: options.borderColor,position: 'absolute',top: '0px',left: '0px',zIndex: 500,opacity: options.borderOpacity };
         var titleCloseStyle = { fontFamily:'Arial, Helvetica, sans-serif', color:'#aaa', cursor:'default' };
         
@@ -1195,7 +1280,7 @@ Object.extend(document, {
         win.insert(background = new Element('div'));
         win.insert(wrapper = new Element('div'));
         wrapper.insert(title = new Element('div'));
-        title.insert(title_table = new Element('table', { width:'100%' }).insert(tbody = new Element('tbody').insert(tr = new Element('tr'))));
+        title.insert(title_table = new Element('table', { width:'100%', height:'100%' }).insert(tbody = new Element('tbody').insert(tr = new Element('tr'))));
         tr.insert(title_text = new Element('td'));
         tr.insert(title_close = new Element('td', {width:20, align:'center'}));
         wrapper.insert(content = new Element('div'));
@@ -1490,7 +1575,9 @@ Protoplus.ui = {
             }else{
                 input.setStyle(options.style);
             }
+            
             elem.update(input);
+            
             elem.onStart(elem, currentValue, input);
             setTimeout(function(){
                 input.focus();
@@ -1784,8 +1871,10 @@ Protoplus.ui = {
                 $$(".pp_tooltip_").each(function(t){ t.remove(); });
                 return true; 
             }
-            clearTimeout(outer.delay);
-            clearTimeout(outer.duration);
+            if(outer){
+                clearTimeout(outer.delay);
+                clearTimeout(outer.duration);
+            }
             if(options.fadeOut){
                 dur = options.fadeOut.duration? options.fadeOut.duration : 0.2;
                 outer.fade({duration:dur, onEnd:function(){ if(outer.parentNode){  outer.remove(); } }});
@@ -1842,7 +1931,7 @@ Protoplus.ui = {
         var stopDragTimer = false;
         
         var drag = function (e){
-            //options.onDrag(drag_element, handler, e);
+            options.onDrag(drag_element, handler, e);
             var top   = startY+(Number(Event.pointerY(e)-mouseY));
             var left  = startX+(Number(Event.pointerX(e)-mouseX));
             if(options.snap){
@@ -2031,9 +2120,9 @@ Protoplus.ui = {
         
         // Make Element Disabled
         element.disabled = (options.disabled=="true" || options.disabled === true)? true : false;
-        
         element.setStyle({
-            width: ((options.stars + ( /* add place for reset button */ options.resetButton ? 1 : 0)) * 20) + "px",
+            display:'inline-block',
+            width: ((parseInt(options.stars, 10) + ( /* add place for reset button */ options.resetButton ? 1 : 0)) * 20) + "px",
             cursor: options.disabled ? "default" : "pointer" /*, clear:"left"*/
         });
         element.unselectable();
@@ -2924,6 +3013,7 @@ Protoplus.ui = {
             onPinned: Prototype.K,
             onUnpinned: Prototype.K,
             onBeforeScroll: Prototype.K,
+            onBeforeScrollFail: Prototype.K,
             onScroll: Prototype.K
         }, options || {});
         
@@ -2944,13 +3034,80 @@ Protoplus.ui = {
             }else{
                 style = {position:'absolute', top:top+'px'};
             }
-        
-            if(options.onBeforeScroll(element, style.top, bodyOff.top) !== false){
+
+            if(options.onBeforeScroll(element, parseInt(style.top, 10), bodyOff.top) !== false){
                 element.setStyle(style);
                 options.onScroll(element, bodyOff.top);
             }
         }
         
+        // Pins the element where it is located
+        element.pin = function(){
+            var bodyOff = $(document.body).cumulativeScrollOffset();
+            element.style.top = bodyOff.top + options.offset + 'px';
+            element.style.position = 'absolute';
+            options.onPinned(element);  
+            element.pinned = true; 
+        };
+        
+        // Check if the element is pinned
+        element.isPinned = function(){ options.onPinned(element); return element.pinned; };
+        
+        // Sets the element free
+        element.unpin = function(){
+            element.pinned = false;
+            // Run the scroll Event when unpinned
+            onScroll();
+            options.onUnpinned(element);
+        };
+        
+        element.updateScroll = onScroll;
+        
+        /**
+         * Updates the max and left limits. Suitable for draggable elements
+         */
+        element.updateTop = function(topLimit){
+            top = topLimit;
+            return element;
+        };
+        
+        // Set the scroll Event
+        Event.observe(window, 'scroll', onScroll);
+        return element;
+    },
+    positionFixedBottom: function(element, options){
+        
+        options = Object.extend({
+            offset: 0, // left, top
+            onPinned: Prototype.K,
+            onUnpinned: Prototype.K,
+            onBeforeScroll: Prototype.K,
+            onScroll: Prototype.K
+        }, options || {});
+        
+        var off  = element.cumulativeOffset();
+        var sOff = element.cumulativeScrollOffset();
+        var top = off.top + sOff.top;
+        var h = element.getHeight();
+        var left = off.left + sOff.left;
+        
+        var onScroll = function(arguments){
+            if(element.pinned){ return true; }
+            
+            var style = {};
+            var bodyOff = $(document.body).cumulativeScrollOffset();
+            //if(sOff.top < options.offset){ options.offset = sOff.top; }
+            
+            if(top + h >= bodyOff.top + options.offset){
+                style = {position:'fixed', bottom: options.offset+'px'};
+            }else{
+                if(element.style.position == "fixed"){
+                    element.setStyle({position:'absolute', top:bodyOff.top+options.offset+'px'});
+                    options.onBeforeScrollFail(element, parseInt(style.top, 10), bodyOff.top);
+                }
+            }
+        }
+        onScroll();
         // Pins the element where it is located
         element.pin = function(){
             var bodyOff = $(document.body).cumulativeScrollOffset();

@@ -32,7 +32,8 @@
                         dim:false,
                         buttons:[
                             {
-                                text: "Cancel",
+                                title: "Cancel",
+                                name: 'cancel',
                                 handler: function(){
                                     w.close();
                                 }
@@ -45,7 +46,16 @@
                     document.createNewWindow({
                         title:'Hello this is my window',
                         content:$('text').innerHTML,
-                        width:600
+                        width:600,
+                        buttons:[
+                            {
+                                title: "Open Another window",
+                                name: 'openOther',
+                                handler: function(){
+                                    opn_window(true);
+                                }
+                            }
+                        ]
                     })
                 }
                 
@@ -106,7 +116,6 @@
         dapibus. Fusce tristique diam rhoncus diam! Praesent
         pellentesque augue quis eros. Donec ultrices. Pellentesque
         habitant mo
-        <input type="button" value="Open Other Window" onclick="opn_window(1)">
         </p>
 	</body>
 </html>

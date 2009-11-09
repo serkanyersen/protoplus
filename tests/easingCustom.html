@@ -13,7 +13,7 @@
         </style>
         <script type="text/javascript">
             function runTest(){
-                $('box1').setStyle('top:8px;left:8px;').setStyle({'-webkit-transform':'rotate(0deg)'})
+                $('box1').setStyle('top:150px;left:250px;').setStyle({'-webkit-transform':'rotate(0deg)'})
                 var back = "rgb("+[rand(0, 200), rand(0, 200), rand(0, 200)].join(', ')+")";
                 var etop = $('easeTop').getSelected().text;
                 var eleft = $('easeLeft').getSelected().text;
@@ -32,7 +32,7 @@
                         var div = document.createElement('div');
                         b = $('box1').style;
                         div.title="Top: "+etop+", Left: "+eleft;
-                        div.style.cssText = "height:0px;width:0px;border:1px solid "+back+";position:absolute;top:"+b.top+";left:"+b.left;
+                        div.style.cssText = "height:2px;width:2px;border:1px solid "+back+";position:absolute;top:"+b.top+";left:"+b.left;
                         div.className="dots";
                         document.body.appendChild(div);
                     }
@@ -55,8 +55,22 @@
                     runTest();
                 });
                 $('cpath').on('click', function(){
-                    $('box1').setStyle('top:8px;left:8px;').setStyle({'-webkit-transform':'rotate(0deg)'})
+                    $('box1').setStyle('top:150px;left:250px;').setStyle({'-webkit-transform':'rotate(0deg)'})
                     $$('.dots').invoke('remove');
+                });
+                var ba = "";
+                $('box1').setDraggable({
+                    onStart:function(){
+                        ba = "rgb("+[rand(0, 200), rand(0, 200), rand(0, 200)].join(', ')+")";
+                    },
+                    onDrag:function(){
+                        if(!$('dpaths').checked){return;}
+                        var div = document.createElement('div');
+                        b = $('box1').style;
+                        div.style.cssText = "height:2px;width:2px;border:1px solid "+ba+";position:absolute;top:"+b.top+";left:"+b.left;
+                        div.className="dots";
+                        document.body.appendChild(div);
+                    }
                 });
             })
         
@@ -69,10 +83,9 @@
         </style>
 	</head>
 	<body>
-	    <div id="box1" style="position:absolute;top:8px;left:8px;border:1px solid #999; background:#ddd; height:50px; width:50px;">
+	    <div id="box1" style="position:absolute;top:150px;left:250px;border:1px solid #999; background:#ddd; height:50px; width:50px;">
             &nbsp;
 	    </div>
-        <br><br><br><br>
         Top Easing: <select id="easeTop"></select><br>
         Left Easing: <select id="easeLeft"></select><br> 
         Duration: 
