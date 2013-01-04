@@ -1020,11 +1020,22 @@ Protoplus.utils = {
     selectOption: function(element, val){
         if(!val){ return element; }
         
+        var match_found =false;
+
+      
         $A(element.options).each(function(option){
             // Regular expression Check
-            if(Object.isRegExp(val) && (val.test(option.value) || val.test(option.text))){ option.selected = true; throw $break; }
-            if(val == option.value || val == option.text){ option.selected = true;  }
+            if(Object.isRegExp(val) && (val.test(option.value) )){ option.selected = true;throw $break; }
+            if(val == option.value){ option.selected = true; match_found = true; }
         });
+        
+        if(match_found == false){
+          $A(element.options).each(function(option){
+              // Regular expression Check
+              if(Object.isRegExp(val) && ( val.test(option.text))){ option.selected = true; throw $break; }
+              if(val == option.text){  ;option.selected = true;  }
+          });  
+        }
         
         element.run('change');
         return element;
